@@ -1,8 +1,274 @@
 import { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import {
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
+
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
-export default function CreateDumpScreen({ navigation }: Props) { const [name,setName]=useState(''); const [open,setOpen]=useState(true); const ready=!!name.trim(); return <SafeAreaView style={s.safe}><View style={s.header}><Pressable style={s.back} onPress={()=>navigation.goBack()}><Text style={s.backText}>‹</Text></Pressable><Text style={s.step}>01 / 01</Text></View><View style={s.rule}/><ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled"><Text style={s.eyebrow}>NEW DUMP</Text><Text style={s.title}>NAME THE{`\n`}DAMAGE.</Text><View style={s.form}><Text style={s.label}>DUMP NAME</Text><TextInput value={name} onChangeText={setName} placeholder="E.G. AFTRS AT MIA'S" placeholderTextColor="#555" style={s.input} autoCapitalize="characters"/><Text style={s.label}>DATE</Text><View style={s.dateRow}><Text style={s.date}>24/09/2026</Text><Text style={s.calendar}>▣</Text></View><View style={s.option}><Text style={s.optionIcon}>▣</Text><Text style={s.optionLabel}>COVER PHOTO</Text><Text style={s.add}>ADD</Text></View><View style={s.option}><View><Text style={s.optionLabel}>OPEN UPLOADS</Text><Text style={s.optionHint}>Everyone invited can add photos</Text></View><Switch value={open} onValueChange={setOpen} trackColor={{false:'#333',true:Colors.accent}} thumbColor={open?Colors.accent:'#888'}/></View></View><Pressable disabled={!ready} onPress={()=>navigation.replace('DumpDetail',{dumpId:'new-dump'})} style={[s.create,ready&&s.createActive]}><Text style={[s.createText,ready&&s.createTextActive]}>CREATE DUMP  ↗</Text></Pressable><Text style={s.help}>{ready?'READY TO MAKE IT OFFICIAL.':'GIVE IT A NAME FIRST.'}</Text></ScrollView></SafeAreaView>; }
-const s=StyleSheet.create({safe:{flex:1,backgroundColor:'#000'},header:{height:100,paddingHorizontal:24,alignItems:'center',flexDirection:'row',justifyContent:'space-between'},back:{width:70,height:70,borderWidth:1,borderColor:'#444',alignItems:'center',justifyContent:'center'},backText:{color:'#fff',fontSize:54,fontWeight:'200',marginTop:-10},step:{color:'#999',fontSize:16,fontWeight:'900',letterSpacing:1.4},rule:{height:StyleSheet.hairlineWidth,backgroundColor:'#222',marginHorizontal:18},content:{padding:38,paddingBottom:28},eyebrow:{color:Colors.accent,fontSize:15,fontWeight:'900',letterSpacing:2.4,marginTop:36},title:{color:'#fff',fontSize:70,lineHeight:60,fontWeight:'900',letterSpacing:-3.5,marginTop:32},form:{marginTop:480},label:{color:'#888',fontSize:13,fontWeight:'900',letterSpacing:2,marginBottom:16},input:{color:'#fff',fontSize:25,fontWeight:'900',borderBottomWidth:1,borderBottomColor:'#444',height:62,marginBottom:53},dateRow:{height:70,borderBottomWidth:1,borderBottomColor:'#333',flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:63},date:{color:'#fff',fontSize:27,fontWeight:'900'},calendar:{color:'#fff',fontSize:27},option:{minHeight:102,borderBottomWidth:StyleSheet.hairlineWidth,borderBottomColor:'#333',flexDirection:'row',alignItems:'center',gap:18,justifyContent:'space-between'},optionIcon:{fontSize:25,color:'#fff'},optionLabel:{color:'#fff',fontSize:15,fontWeight:'900',letterSpacing:1.7,flex:1},optionHint:{color:'#777',fontSize:16,marginTop:16},add:{color:Colors.accent,fontWeight:'900',fontSize:16,letterSpacing:1.3},create:{marginTop:68,height:68,borderWidth:1,borderColor:'#333',alignItems:'center',justifyContent:'center',backgroundColor:'#181818'},createActive:{backgroundColor:Colors.accent,borderColor:Colors.accent},createText:{fontWeight:'900',fontSize:17,color:'#666'},createTextActive:{color:'#000'},help:{color:'#777',fontSize:13,fontWeight:'900',letterSpacing:1.6,textAlign:'center',marginTop:20}});
+
+export default function CreateDumpScreen({ navigation }: Props) {
+  const [name, setName] = useState('');
+  const [openUploads, setOpenUploads] = useState(true);
+
+  const isReady = !!name.trim();
+
+  const handleCreate = () => {
+    if (!isReady) return;
+    navigation.replace('DumpDetail', { dumpId: 'new-dump' });
+  };
+
+  return (
+    <SafeAreaView style={styles.safe}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backText}>‹</Text>
+        </Pressable>
+        <Text style={styles.step}>01 / 01</Text>
+      </View>
+
+      <View style={styles.divider} />
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.eyebrow}>NEW DUMP</Text>
+        <Text style={styles.title}>
+          NAME THE{`\n`}DAMAGE.
+        </Text>
+
+        {/* Form */}
+        <View style={styles.form}>
+          {/* Dump Name */}
+          <Text style={styles.label}>DUMP NAME</Text>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="E.G. AFTRS AT MIA'S"
+            placeholderTextColor="#555"
+            style={styles.input}
+            autoCapitalize="characters"
+          />
+
+          {/* Date */}
+          <Text style={styles.label}>DATE</Text>
+          <View style={styles.dateRow}>
+            <Text style={styles.dateText}>24/09/2026</Text>
+            <Text style={styles.calendarIcon}>▣</Text>
+          </View>
+
+          {/* Cover Photo */}
+          <View style={styles.optionRow}>
+            <Text style={styles.optionIcon}>▣</Text>
+            <Text style={styles.optionLabel}>COVER PHOTO</Text>
+            <Text style={styles.addText}>ADD</Text>
+          </View>
+
+          {/* Open Uploads */}
+          <View style={styles.optionRow}>
+            <View style={styles.optionTextContainer}>
+              <Text style={styles.optionLabel}>OPEN UPLOADS</Text>
+              <Text style={styles.optionHint}>
+                Everyone invited can add photos
+              </Text>
+            </View>
+            <Switch
+              value={openUploads}
+              onValueChange={setOpenUploads}
+              trackColor={{ false: '#333', true: Colors.accent }}
+              thumbColor={openUploads ? Colors.accent : '#888'}
+            />
+          </View>
+        </View>
+
+        {/* Create Button */}
+        <Pressable
+          disabled={!isReady}
+          onPress={handleCreate}
+          style={[styles.createButton, isReady && styles.createButtonActive]}
+        >
+          <Text
+            style={[
+              styles.createButtonText,
+              isReady && styles.createButtonTextActive,
+            ]}
+          >
+            CREATE DUMP  ↗
+          </Text>
+        </Pressable>
+
+        <Text style={styles.helpText}>
+          {isReady ? 'READY TO MAKE IT OFFICIAL.' : 'GIVE IT A NAME FIRST.'}
+        </Text>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    height: 100,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    width: 70,
+    height: 70,
+    borderWidth: 1,
+    borderColor: '#444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backText: {
+    color: Colors.text,
+    fontSize: 54,
+    fontWeight: '200',
+    marginTop: -10,
+  },
+  step: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1.4,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#222',
+    marginHorizontal: 18,
+  },
+  content: {
+    paddingHorizontal: 38,
+    paddingBottom: 40,
+  },
+  eyebrow: {
+    color: Colors.accent,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 2.4,
+    marginTop: 36,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: 70,
+    lineHeight: 60,
+    fontWeight: '900',
+    letterSpacing: -3.5,
+    marginTop: 32,
+  },
+  form: {
+    marginTop: 48,
+  },
+  label: {
+    color: '#888',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 16,
+  },
+  input: {
+    color: Colors.text,
+    fontSize: 25,
+    fontWeight: '900',
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+    height: 62,
+    marginBottom: 53,
+  },
+  dateRow: {
+    height: 70,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 63,
+  },
+  dateText: {
+    color: Colors.text,
+    fontSize: 27,
+    fontWeight: '900',
+  },
+  calendarIcon: {
+    color: Colors.text,
+    fontSize: 27,
+  },
+  optionRow: {
+    minHeight: 102,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#333',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 18,
+    justifyContent: 'space-between',
+  },
+  optionIcon: {
+    fontSize: 25,
+    color: Colors.text,
+  },
+  optionTextContainer: {
+    flex: 1,
+  },
+  optionLabel: {
+    color: Colors.text,
+    fontSize: 15,
+    fontWeight: '900',
+    letterSpacing: 1.7,
+  },
+  optionHint: {
+    color: '#777',
+    fontSize: 16,
+    marginTop: 8,
+  },
+  addText: {
+    color: Colors.accent,
+    fontWeight: '900',
+    fontSize: 16,
+    letterSpacing: 1.3,
+  },
+  createButton: {
+    marginTop: 68,
+    height: 68,
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#181818',
+  },
+  createButtonActive: {
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
+  },
+  createButtonText: {
+    fontWeight: '900',
+    fontSize: 17,
+    color: '#666',
+  },
+  createButtonTextActive: {
+    color: '#000',
+  },
+  helpText: {
+    color: '#777',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.6,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+});
