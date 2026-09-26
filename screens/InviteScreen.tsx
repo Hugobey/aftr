@@ -3,6 +3,7 @@ import QRCode from 'react-native-qrcode-svg';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
+import Header from '../components/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Invite'>;
 
@@ -23,14 +24,7 @@ export default function InviteScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <Text style={styles.live}>LIVE</Text>
-      </View>
-
-      <View style={styles.divider} />
+      <Header showBack rightLabel="LIVE" />
 
       {/* Main Content */}
       <View style={styles.content}>
@@ -89,38 +83,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  header: {
-    height: 104,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 70,
-    height: 70,
-    borderWidth: 1,
-    borderColor: '#444',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    fontSize: 54,
-    color: Colors.text,
-    fontWeight: '200',
-    marginTop: -10,
-  },
-  live: {
-    color: Colors.accent,
-    fontSize: 17,
-    fontWeight: '900',
-    letterSpacing: 1.4,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#222',
-    marginHorizontal: 18,
-  },
+//   divider: {
+//     height: StyleSheet.hairlineWidth,
+//     backgroundColor: '#222',
+//     marginHorizontal: 18,
+//   },
   content: {
     flex: 1,
     paddingHorizontal: 38,
