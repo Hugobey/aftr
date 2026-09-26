@@ -32,8 +32,6 @@ export default function CreateDumpScreen({ navigation }: Props) {
       {/* Header */}
       <Header showBack rightLabel="01 / 01" />
 
-      <View style={styles.divider} />
-
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"

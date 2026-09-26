@@ -13,6 +13,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
+import Header from '../components/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -36,7 +37,7 @@ export default function DumpDetailScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>‹</Text>
         </Pressable>
@@ -47,9 +48,12 @@ export default function DumpDetailScreen({ navigation }: Props) {
         >
           <Text style={styles.shareText}>⇧</Text>
         </Pressable>
-      </View>
-
-      <View style={styles.divider} />
+      </View> */}
+      <Header
+        showBack
+        rightIcon="share"
+        onRightIconPress={() => navigation.navigate('Invite', { dumpId: 'no-sleep' })}
+        />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Cover */}
@@ -127,37 +131,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  header: {
-    height: 100,
-    paddingHorizontal: 32,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  iconButton: {
-    width: 70,
-    height: 70,
-    borderWidth: 1,
-    borderColor: '#444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backText: {
-    fontSize: 54,
-    color: Colors.text,
-    fontWeight: '200',
-    marginTop: -10,
-  },
-  shareText: {
-    color: Colors.text,
-    fontSize: 41,
-    fontWeight: '200',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#222',
-    marginHorizontal: 18,
   },
   cover: {
     height: 520,
