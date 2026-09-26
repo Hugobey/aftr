@@ -11,6 +11,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
+import Header from '../components/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -46,37 +47,12 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Create a dump"
-          style={styles.iconButton}
-          onPress={() => navigation.navigate('CreateDump')}
-        >
-          <Text style={styles.plus}>+</Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Toggle demo dumps"
-          onLongPress={() => setShowDumps((prev) => !prev)}
-        >
-          <ImageBackground
-            source={require('../assets/images/AFTR_logo..png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Join a dump with QR code"
-          style={styles.iconButton}
-          onPress={() => navigation.navigate('JoinDump')}
-        >
-          <Text style={styles.scan}>⌗</Text>
-        </Pressable>
-      </View>
+        <Header
+            variant="home"
+            onPlusPress={() => navigation.navigate('CreateDump')}
+            onScanPress={() => navigation.navigate('JoinDump')}
+            onLogoLongPress={() => setShowDumps((prev) => !prev)}
+        />
 
       <View style={styles.divider} />
 
@@ -227,38 +203,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#222',
     marginHorizontal: 18,
   },
-  iconButton: {
-    width: 72,
-    height: 72,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#555',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 3,
-  },
-  plus: {
-    color: Colors.text,
-    fontSize: 48,
-    fontWeight: '200',
-    marginTop: -4,
-  },
-  scan: {
-    color: Colors.text,
-    fontSize: 38,
-    fontWeight: '600',
-  },
-  logo: {
-    width: 70,
-    height: 34,
-  },
 
   // Empty State
   empty: {
     flex: 1,
     paddingHorizontal: 42,
-    paddingTop: '40%',
+    paddingTop: '0%',
     justifyContent: 'space-between',
-    paddingBottom: 28,
+    // paddingBottom: 28,
   },
   eyebrow: {
     color: '#999',

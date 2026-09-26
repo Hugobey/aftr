@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    height: 100,
+    // height: 100,
     paddingHorizontal: 32,
     flexDirection: 'row',
     alignItems: 'center',
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 2.4,
-    marginTop: 33,
+    // marginTop: 33,
   },
   title: {
     color: Colors.text,
