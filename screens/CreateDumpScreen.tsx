@@ -12,6 +12,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
+import Header from '../components/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
@@ -29,12 +30,7 @@ export default function CreateDumpScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <Text style={styles.step}>01 / 01</Text>
-      </View>
+      <Header showBack rightLabel="01 / 01" />
 
       <View style={styles.divider} />
 
@@ -120,33 +116,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  header: {
-    height: 75,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#444',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backText: {
-    color: Colors.text,
-    fontSize: 34,
-    fontWeight: '200',
-    marginTop: -10,
-  },
-  step: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '900',
-    letterSpacing: 1.4,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
