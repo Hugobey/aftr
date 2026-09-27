@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Pressable,
   SafeAreaView,
@@ -8,6 +8,9 @@ import {
   Text,
   TextInput,
   View,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
@@ -19,93 +22,122 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 export default function CreateDumpScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [openUploads, setOpenUploads] = useState(true);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
+  const scrollRef = useRef<ScrollView>(null);
   const isReady = !!name.trim();
 
   const handleCreate = () => {
     if (!isReady) return;
+    Keyboard.dismiss();
     navigation.replace('DumpDetail', { dumpId: 'new-dump' });
+  };
+
+  const handleFocus = () => {
+    setIsInputFocused(true);
+    // Small delay so the keyboard has time to open
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+
+  const handleBlur = () => {
+    setIsInputFocused(false);
   };
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
       <Header showBack rightLabel="01 / 01" />
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
       >
-        <Text style={styles.eyebrow}>NEW DUMP</Text>
-        <Text style={styles.title}>
-          NAME THE{`\n`}DAMAGE.
-        </Text>
-
-        {/* Form */}
-        <View style={styles.form}>
-          {/* Dump Name */}
-          <Text style={styles.label}>DUMP NAME</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="E.G. AFTRS AT MIA'S"
-            placeholderTextColor="#555"
-            style={styles.input}
-            autoCapitalize="characters"
-          />
-
-          {/* Date */}
-          <Text style={styles.label}>DATE</Text>
-          <View style={styles.dateRow}>
-            <Text style={styles.dateText}>24/09/2026</Text>
-            <Text style={styles.calendarIcon}>▣</Text>
-          </View>
-
-          {/* Cover Photo */}
-          <View style={styles.optionRow}>
-            <Text style={styles.optionIcon}>▣</Text>
-            <Text style={styles.optionLabel}>COVER PHOTO</Text>
-            <Text style={styles.addText}>ADD</Text>
-          </View>
-
-          {/* Open Uploads */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionTextContainer}>
-              <Text style={styles.optionLabel}>OPEN UPLOADS</Text>
-              <Text style={styles.optionHint}>
-                Everyone invited can add photos
-              </Text>
-            </View>
-            <Switch
-              value={openUploads}
-              onValueChange={setOpenUploads}
-              trackColor={{ false: '#333', true: Colors.accent }}
-              thumbColor={openUploads ? Colors.accent : '#888'}
-            />
-          </View>
-        </View>
-
-        {/* Create Button */}
-        <Pressable
-          disabled={!isReady}
-          onPress={handleCreate}
-          style={[styles.createButton, isReady && styles.createButtonActive]}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text
-            style={[
-              styles.createButtonText,
-              isReady && styles.createButtonTextActive,
-            ]}
-          >
-            CREATE DUMP  ↗
+          <Text style={styles.eyebrow}>NEW DUMP</Text>
+          <Text style={styles.title}>
+            NAME THE{`\n`}DAMAGE.
           </Text>
-        </Pressable>
 
-        <Text style={styles.helpText}>
-          {isReady ? 'READY TO MAKE IT OFFICIAL.' : 'GIVE IT A NAME FIRST.'}
-        </Text>
-      </ScrollView>
+          <View style={styles.form}>
+            {/* Dump Name */}
+            <Text style={styles.label}>DUMP NAME</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="E.G. AFTRS AT MIA'S"
+              placeholderTextColor="#555"
+              style={styles.input}
+              autoCapitalize="characters"
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              returnKeyType="done"
+              onSubmitEditing={handleCreate}
+            />
+
+            {/* Date */}
+            <Text style={styles.label}>DATE</Text>
+            <View style={styles.dateRow}>
+              <Text style={styles.dateText}>24/09/2026</Text>
+              <Text style={styles.calendarIcon}>▣</Text>
+            </View>
+
+            {/* Cover Photo */}
+            <View style={styles.optionRow}>
+              <Text style={styles.optionIcon}>▣</Text>
+              <Text style={styles.optionLabel}>COVER PHOTO</Text>
+              <Text style={styles.addText}>ADD</Text>
+            </View>
+
+            {/* Open Uploads */}
+            <View style={styles.optionRow}>
+              <View style={styles.optionTextContainer}>
+                <Text style={styles.optionLabel}>OPEN UPLOADS</Text>
+                <Text style={styles.optionHint}>
+                  Everyone invited can add photos
+                </Text>
+              </View>
+              <Switch
+                value={openUploads}
+                onValueChange={setOpenUploads}
+                trackColor={{ false: '#333', true: Colors.accent }}
+                thumbColor={openUploads ? Colors.accent : '#888'}
+              />
+            </View>
+          </View>
+
+          {/* Spacer so content can scroll above the bottom bar */}
+          <View style={{ height: 10 }} />
+        </ScrollView>
+
+        {/* Fixed / Keyboard-aware Bottom Bar */}
+        <View style={styles.bottomBar}>
+          <Pressable
+            disabled={!isReady}
+            onPress={handleCreate}
+            style={[styles.createButton, isReady && styles.createButtonActive]}
+          >
+            <Text
+              style={[
+                styles.createButtonText,
+                isReady && styles.createButtonTextActive,
+              ]}
+            >
+              CREATE DUMP  ↗
+            </Text>
+          </Pressable>
+
+          <Text style={styles.helpText}>
+            {isReady ? 'READY TO MAKE IT OFFICIAL.' : 'GIVE IT A NAME FIRST.'}
+          </Text>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -115,21 +147,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#222',
-    marginHorizontal: 18,
+  flex: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: 38,
-    paddingBottom: 40,
+    paddingTop: 24,
+    paddingBottom: 20,
   },
   eyebrow: {
     color: Colors.accent,
     fontSize: 15,
     fontWeight: '900',
     letterSpacing: 2.4,
-    // marginTop: 36,
   },
   title: {
     color: Colors.text,
@@ -209,8 +239,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1.3,
   },
+
+  // Bottom bar (stays above keyboard)
+  bottomBar: {
+    paddingHorizontal: 38,
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#222',
+    backgroundColor: Colors.background,
+  },
   createButton: {
-    marginTop: 68,
     height: 68,
     borderWidth: 1,
     borderColor: '#333',
@@ -236,6 +275,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1.6,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 16,
   },
 });

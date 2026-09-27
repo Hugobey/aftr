@@ -34,16 +34,7 @@ export default function JoinDumpScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      {/* <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-        <Text style={styles.topLabel}>SCAN</Text>
-      </View> */}
       <Header showBack rightLabel="SCAN" />
-
-      <View style={styles.divider} />
-
       <View style={styles.content}>
         <Text style={styles.eyebrow}>JOIN A DUMP</Text>
         <Text style={styles.title}>
@@ -104,11 +95,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#222',
-    marginHorizontal: 18,
   },
   content: {
     flex: 1,

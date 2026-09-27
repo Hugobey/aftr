@@ -53,9 +53,7 @@ export default function HomeScreen({ navigation }: Props) {
             onScanPress={() => navigation.navigate('JoinDump')}
             onLogoLongPress={() => setShowDumps((prev) => !prev)}
         />
-
-      <View style={styles.divider} />
-
+        
       {showDumps ? (
         <DumpList navigation={navigation} />
       ) : (

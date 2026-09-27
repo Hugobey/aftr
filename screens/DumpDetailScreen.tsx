@@ -36,19 +36,7 @@ export default function DumpDetailScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>‹</Text>
-        </Pressable>
-
-        <Pressable
-          style={styles.iconButton}
-          onPress={() => navigation.navigate('Invite', { dumpId: 'no-sleep' })}
-        >
-          <Text style={styles.shareText}>⇧</Text>
-        </Pressable>
-      </View> */}
+      {/* Header */}    
       <Header
         showBack
         rightIcon="share"
