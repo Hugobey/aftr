@@ -16,6 +16,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
+import { pickImages } from '../utils/pickImages';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
@@ -23,6 +24,7 @@ export default function CreateDumpScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [openUploads, setOpenUploads] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [coverUri, setCoverUri] = useState<string | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
   const isReady = !!name.trim();
@@ -44,6 +46,12 @@ export default function CreateDumpScreen({ navigation }: Props) {
   const handleBlur = () => {
     setIsInputFocused(false);
   };
+
+  const handleUploadPictures = async () => {
+    const uris = await pickImages({ multiple: false });
+    if (uris[0]) setCoverUri(uris[0]);
+    console.log('Selected cover photo URI:', uris[0]);
+}
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -89,7 +97,10 @@ export default function CreateDumpScreen({ navigation }: Props) {
             </View>
 
             {/* Cover Photo */}
-            <View style={styles.optionRow}>
+            <View 
+                style={styles.optionRow}
+                onTouchStart={handleUploadPictures}
+            >
               <Text style={styles.optionIcon}>▣</Text>
               <Text style={styles.optionLabel}>COVER PHOTO</Text>
               <Text style={styles.addText}>ADD</Text>
