@@ -48,10 +48,20 @@ export default function CreateDumpScreen({ navigation }: Props) {
   };
 
   const handleUploadPictures = async () => {
-    const uris = await pickImages({ multiple: false });
-    if (uris[0]) setCoverUri(uris[0]);
+    const uris = await pickImages({ 
+        multiple: true, 
+        limit: 10
+    });
+    if (uris.length > 0) {
+    navigation.navigate('SelectedPhotos', {
+        initialUris: uris,
+        maxPhotos: 10,
+        title: 'COVER + PHOTOS',
+        confirmLabel: 'CONTINUE',
+    });
+    }
     console.log('Selected cover photo URI:', uris[0]);
-}
+  };
 
   return (
     <SafeAreaView style={styles.safe}>

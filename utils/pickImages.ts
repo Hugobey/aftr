@@ -11,7 +11,6 @@ export async function pickImages({
   multiple = false,
   limit = 1,
 }: PickImagesOptions = {}): Promise<string[]> {
-  // 1. Ask for permission
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
   if (!permission.granted) {
@@ -22,13 +21,12 @@ export async function pickImages({
     return [];
   }
 
-  // 2. Launch the picker
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
     allowsMultipleSelection: multiple,
     selectionLimit: limit,
-    quality: 0.8,
-    allowsEditing: !multiple, // only allow crop when picking a single image
+    quality: 0.85,
+    allowsEditing: false, // ← never show the crop screen
   });
 
   if (result.canceled) {
@@ -37,7 +35,6 @@ export async function pickImages({
 
   const uris = result.assets.map((asset) => asset.uri);
 
-  // 3. Extra safety check (in case the system ignores selectionLimit on some devices)
   if (multiple && uris.length > limit) {
     Alert.alert(
       'Limit reached',

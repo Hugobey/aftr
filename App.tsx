@@ -10,6 +10,7 @@ import CreateDumpScreen from './screens/CreateDumpScreen';
 import JoinDumpScreen from './screens/JoinDumpScreen';
 import DumpDetailScreen from './screens/DumpDetailScreen';
 import InviteScreen from './screens/InviteScreen';
+import SelectedPhotosScreen from './screens/SelectedPhotoScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -17,6 +18,12 @@ export type RootStackParamList = {
   JoinDump: undefined;
   DumpDetail: { dumpId: string };
   Invite: { dumpId: string };
+  SelectedPhotos: {
+    initialUris: string[];
+    maxPhotos?: number;
+    title?: string;
+    confirmLabel?: string;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +44,7 @@ export default function App() {
         <Stack.Screen name="JoinDump" component={JoinDumpScreen} />
         <Stack.Screen name="DumpDetail" component={DumpDetailScreen} />
         <Stack.Screen name="Invite" component={InviteScreen} />
+        <Stack.Screen name="SelectedPhotos" component={SelectedPhotosScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
