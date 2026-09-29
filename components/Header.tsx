@@ -4,10 +4,11 @@ import Icon from './Icon';
 import { Colors } from '../constants/Colors';
 
 interface HeaderProps {
-  /** Home screen variant */
   variant?: 'default' | 'home';
 
   showBack?: boolean;
+  onBackPress?: () => void;          // ← new
+
   rightLabel?: string;
   rightLabelColor?: string;
   onRightPress?: () => void;
@@ -15,7 +16,6 @@ interface HeaderProps {
   rightIcon?: 'share' | 'scan' | 'plus';
   onRightIconPress?: () => void;
 
-  // Home specific
   onPlusPress?: () => void;
   onScanPress?: () => void;
   onLogoLongPress?: () => void;
@@ -32,6 +32,7 @@ export default function Header({
   onPlusPress,
   onScanPress,
   onLogoLongPress,
+  onBackPress,
 }: HeaderProps) {
   const navigation = useNavigation();
 
@@ -71,14 +72,20 @@ export default function Header({
       <View style={styles.container}>
         {/* Left */}
         {showBack ? (
-          <Pressable
-            style={styles.iconButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="back" size={24} />
-          </Pressable>
+            <Pressable
+                style={styles.iconButton}
+                onPress={() => {
+                if (onBackPress) {
+                    onBackPress();
+                } else {
+                    navigation.goBack();
+                }
+                }}
+            >
+                <Icon name="back" size={24} />
+            </Pressable>
         ) : (
-          <View style={styles.iconButtonPlaceholder} />
+            <View style={styles.iconButtonPlaceholder} />
         )}
 
         {/* Right side */}

@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
+import { CommonActions } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -42,6 +43,14 @@ export default function DumpDetailScreen({ navigation }: Props) {
       {/* Header */}
       <Header
         showBack
+        onBackPress={() => {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Home' }],
+            })
+          );
+        }}
         rightIcon="share"
         onRightIconPress={() =>
           navigation.navigate('Invite', { dumpId: 'no-sleep' })
