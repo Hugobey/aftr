@@ -20,7 +20,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
 const { width } = Dimensions.get('window');
 const GAP = 4;
 const COLS = 3;
-const ITEM_SIZE = (width - GAP * (COLS - 1)) / COLS;
+const HORIZONTAL_PADDING = 20;   // left + right padding of the content
+const ITEM_SIZE = (width - HORIZONTAL_PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
 export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: HORIZONTAL_PADDING,
     paddingTop: 24,
     paddingBottom: 40,
   },
@@ -150,8 +151,7 @@ const styles = StyleSheet.create({
   },
   item: {
     width: ITEM_SIZE,
-    height: ITEM_SIZE,
-    backgroundColor: '#111',
+    height: ITEM_SIZE, // slightly taller looks better for photos    backgroundColor: '#111',
     position: 'relative',
   },
   image: {
