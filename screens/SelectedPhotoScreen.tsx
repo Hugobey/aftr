@@ -56,7 +56,7 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const handleConfirm = () => {
     // For now we just go back.
     // Later you can pass the final uris via a callback or global state.
-    navigation.goBack();
+    navigation.navigate('DumpDetail', { dumpId: 'no-sleep' });
   };
 
   return (

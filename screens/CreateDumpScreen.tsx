@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Image,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
@@ -23,7 +24,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 export default function CreateDumpScreen({ navigation }: Props) {
   const [name, setName] = useState('');
   const [openUploads, setOpenUploads] = useState(true);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const [coverUri, setCoverUri] = useState<string | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -32,35 +32,27 @@ export default function CreateDumpScreen({ navigation }: Props) {
   const handleCreate = () => {
     if (!isReady) return;
     Keyboard.dismiss();
-    navigation.replace('DumpDetail', { dumpId: 'new-dump' });
-  };
 
-  const handleFocus = () => {
-    setIsInputFocused(true);
-    // Small delay so the keyboard has time to open
-    setTimeout(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
-
-  const handleBlur = () => {
-    setIsInputFocused(false);
-  };
-
-  const handleUploadPictures = async () => {
-    const uris = await pickImages({ 
-        multiple: true, 
-        limit: 10
-    });
-    if (uris.length > 0) {
+    // Go to SelectedPhotos with 0 photos
     navigation.navigate('SelectedPhotos', {
-        initialUris: uris,
-        maxPhotos: 10,
-        title: 'COVER + PHOTOS',
-        confirmLabel: 'CONTINUE',
+      initialUris: [],
+      maxPhotos: 10,
+      title: 'PHOTOS',
+      confirmLabel: 'CREATE DUMP',
     });
+  };
+
+  // Cover Photo (single + crop)
+  const handlePickCover = async () => {
+    const uris = await pickImages({
+      multiple: false,
+      allowsEditing: true,
+      aspect: [4, 5],
+    });
+
+    if (uris[0]) {
+      setCoverUri(uris[0]);
     }
-    console.log('Selected cover photo URI:', uris[0]);
   };
 
   return (
@@ -93,8 +85,6 @@ export default function CreateDumpScreen({ navigation }: Props) {
               placeholderTextColor="#555"
               style={styles.input}
               autoCapitalize="characters"
-              onFocus={handleFocus}
-              onBlur={handleBlur}
               returnKeyType="done"
               onSubmitEditing={handleCreate}
             />
@@ -107,14 +97,17 @@ export default function CreateDumpScreen({ navigation }: Props) {
             </View>
 
             {/* Cover Photo */}
-            <View 
-                style={styles.optionRow}
-                onTouchStart={handleUploadPictures}
-            >
-              <Text style={styles.optionIcon}>▣</Text>
+            <Pressable style={styles.optionRow} onPress={handlePickCover}>
+              {coverUri ? (
+                <Image source={{ uri: coverUri }} style={styles.coverPreview} />
+              ) : (
+                <Text style={styles.optionIcon}>▣</Text>
+              )}
               <Text style={styles.optionLabel}>COVER PHOTO</Text>
-              <Text style={styles.addText}>ADD</Text>
-            </View>
+              <Text style={styles.addText}>
+                {coverUri ? 'CHANGE' : 'ADD'}
+              </Text>
+            </Pressable>
 
             {/* Open Uploads */}
             <View style={styles.optionRow}>
@@ -133,11 +126,10 @@ export default function CreateDumpScreen({ navigation }: Props) {
             </View>
           </View>
 
-          {/* Spacer so content can scroll above the bottom bar */}
-          <View style={{ height: 10 }} />
+          <View style={{ height: 20 }} />
         </ScrollView>
 
-        {/* Fixed / Keyboard-aware Bottom Bar */}
+        {/* Bottom Bar */}
         <View style={styles.bottomBar}>
           <Pressable
             disabled={!isReady}
@@ -240,6 +232,11 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: Colors.text,
   },
+  coverPreview: {
+    width: 42,
+    height: 42,
+    borderRadius: 2,
+  },
   optionTextContainer: {
     flex: 1,
   },
@@ -251,8 +248,8 @@ const styles = StyleSheet.create({
   },
   optionHint: {
     color: '#777',
-    fontSize: 16,
-    marginTop: 8,
+    fontSize: 15,
+    marginTop: 6,
   },
   addText: {
     color: Colors.accent,
@@ -260,8 +257,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     letterSpacing: 1.3,
   },
-
-  // Bottom bar (stays above keyboard)
   bottomBar: {
     paddingHorizontal: 38,
     paddingTop: 16,
