@@ -12,37 +12,35 @@ import {
   Platform,
   Keyboard,
   Image,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
+import { useCreateDumpStore } from '../store/createDumpStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
 export default function CreateDumpScreen({ navigation }: Props) {
-  const [name, setName] = useState('');
   const [openUploads, setOpenUploads] = useState(true);
-  const [coverUri, setCoverUri] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
+  const {
+    name,
+    coverUri,
+    isOpen,
+    setName,
+    setCoverUri,
+    setIsOpen,
+   } = useCreateDumpStore();
+
   const isReady = !!name.trim();
 
-  const handleCreate = () => {
-    if (!isReady) return;
-    Keyboard.dismiss();
-
-    // Go to SelectedPhotos with 0 photos
-    navigation.navigate('SelectedPhotos', {
-      initialUris: [],
-      maxPhotos: 10,
-      title: 'PHOTOS',
-      confirmLabel: 'CREATE DUMP',
-    });
-  };
-
-  // Cover Photo (single + crop)
+   // Cover Photo (single + crop)
   const handlePickCover = async () => {
     const uris = await pickImages({
       multiple: false,
@@ -53,6 +51,19 @@ export default function CreateDumpScreen({ navigation }: Props) {
     if (uris[0]) {
       setCoverUri(uris[0]);
     }
+  };
+
+  const handleCreate = () => {
+    if (!isReady || loading) return;
+    Keyboard.dismiss();
+
+    // Go to SelectedPhotos with 0 photos
+    navigation.navigate('SelectedPhotos', {
+      initialUris: [],
+      maxPhotos: 10,
+      title: 'PHOTOS',
+      confirmLabel: 'CREATE DUMP',
+    });
   };
 
   return (
@@ -118,10 +129,10 @@ export default function CreateDumpScreen({ navigation }: Props) {
                 </Text>
               </View>
               <Switch
-                value={openUploads}
-                onValueChange={setOpenUploads}
+                value={isOpen}
+                onValueChange={setIsOpen}
                 trackColor={{ false: '#333', true: Colors.accent }}
-                thumbColor={openUploads ? Colors.accent : '#888'}
+                thumbColor={isOpen ? Colors.accent : '#888'}
               />
             </View>
           </View>

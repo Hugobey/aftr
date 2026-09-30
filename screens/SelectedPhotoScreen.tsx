@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Image,
   Pressable,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -14,6 +15,8 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
+import { useCreateDumpStore } from '../store/createDumpStore';
+import { createDump, addPhotosToDump, debugStorage, testUpload } from '../lib/dump';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
 
@@ -34,6 +37,29 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
   } = route.params;
 
   const [uris, setUris] = useState<string[]>(initialUris);
+  const [loading, setLoading] = useState(false);
+  const {
+    name,
+    coverUri,
+    isOpen,
+    photoUris,
+    addPhotoUris,
+    removePhotoUri,
+    reset,
+  } = useCreateDumpStore();
+
+    useEffect(() => {
+        console.log('SelectedPhotos Zustand data:', {
+            name,
+            coverUri,
+            isOpen,
+            photoUris,
+        });
+        debugStorage();
+        // testUpload();
+    }, []);
+
+
 
   const canAddMore = uris.length < maxPhotos;
 
@@ -52,11 +78,37 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const handleRemove = (index: number) => {
     setUris((prev) => prev.filter((_, i) => i !== index));
   };
+  
+  const handleConfirm = async () => {
+    if (loading) return;
 
-  const handleConfirm = () => {
-    // For now we just go back.
-    // Later you can pass the final uris via a callback or global state.
-    navigation.navigate('DumpDetail', { dumpId: 'no-sleep' });
+    try {
+      setLoading(true);
+
+      // 1. Create the dump
+      const dump = await createDump({
+        name,
+        coverUri,
+        isOpen,
+        date: new Date().toISOString().split('T')[0],
+      });
+
+      // 2. Upload photos if any
+      if (photoUris.length > 0) {
+        await addPhotosToDump(dump.id, photoUris);
+      }
+
+      // 3. Clear the store
+      reset();
+
+      // 4. Go to the new dump
+      navigation.replace('DumpDetail', { dumpId: dump.id });
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Could not create the dump. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
