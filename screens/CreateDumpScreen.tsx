@@ -25,7 +25,7 @@ import { useCreateDumpStore } from '../store/createDumpStore';
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
 export default function CreateDumpScreen({ navigation }: Props) {
-  const [openUploads, setOpenUploads] = useState(true);
+//   const [openUploads, setOpenUploads] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -43,14 +43,15 @@ export default function CreateDumpScreen({ navigation }: Props) {
    // Cover Photo (single + crop)
   const handlePickCover = async () => {
     const uris = await pickImages({
-      multiple: false,
-      allowsEditing: true,
-      aspect: [4, 5],
+        multiple: false,
+        allowsEditing: true,
+        aspect: [4, 5],
     });
 
     if (uris[0]) {
-      setCoverUri(uris[0]);
-    }
+        setCoverUri(uris[0]);
+        console.log('Saved coverUri to Zustand:', uris[0]);
+    };
   };
 
   const handleCreate = () => {
@@ -109,15 +110,13 @@ export default function CreateDumpScreen({ navigation }: Props) {
 
             {/* Cover Photo */}
             <Pressable style={styles.optionRow} onPress={handlePickCover}>
-              {coverUri ? (
-                <Image source={{ uri: coverUri }} style={styles.coverPreview} />
-              ) : (
-                <Text style={styles.optionIcon}>▣</Text>
-              )}
-              <Text style={styles.optionLabel}>COVER PHOTO</Text>
-              <Text style={styles.addText}>
-                {coverUri ? 'CHANGE' : 'ADD'}
-              </Text>
+                {coverUri ? (
+                    <Image source={{ uri: coverUri }} style={styles.coverPreview} />
+                ) : (
+                    <Text style={styles.optionIcon}>▣</Text>
+                )}
+                <Text style={styles.optionLabel}>COVER PHOTO</Text>
+                <Text style={styles.addText}>{coverUri ? 'CHANGE' : 'ADD'}</Text>
             </Pressable>
 
             {/* Open Uploads */}

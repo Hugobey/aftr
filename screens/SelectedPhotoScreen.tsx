@@ -30,14 +30,13 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
 
   const {
-    initialUris = [],
     maxPhotos = 10,
     title = 'SELECTED PHOTOS',
     confirmLabel = 'CONFIRM',
-  } = route.params;
+  } = route.params ?? {};
 
-  const [uris, setUris] = useState<string[]>(initialUris);
   const [loading, setLoading] = useState(false);
+
   const {
     name,
     coverUri,
@@ -48,44 +47,39 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
     reset,
   } = useCreateDumpStore();
 
-    useEffect(() => {
-        console.log('SelectedPhotos Zustand data:', {
-            name,
-            coverUri,
-            isOpen,
-            photoUris,
-        });
-        debugStorage();
-        // testUpload();
-    }, []);
-
-
-
-  const canAddMore = uris.length < maxPhotos;
+  const canAddMore = photoUris.length < maxPhotos;
 
   const handleAddMore = async () => {
-    const remaining = maxPhotos - uris.length;
+    const remaining = maxPhotos - photoUris.length;
+    if (remaining <= 0) return;
+
     const newUris = await pickImages({
       multiple: true,
       limit: remaining,
     });
 
     if (newUris.length > 0) {
-      setUris((prev) => [...prev, ...newUris].slice(0, maxPhotos));
+      addPhotoUris(newUris);
     }
   };
 
   const handleRemove = (index: number) => {
-    setUris((prev) => prev.filter((_, i) => i !== index));
+    removePhotoUri(index);
   };
-  
+
   const handleConfirm = async () => {
     if (loading) return;
 
     try {
       setLoading(true);
 
-      // 1. Create the dump
+      console.log('=== CREATE DUMP DEBUG ===', {
+        name,
+        coverUri,
+        isOpen,
+        photoUris,
+      });
+
       const dump = await createDump({
         name,
         coverUri,
@@ -93,15 +87,11 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
         date: new Date().toISOString().split('T')[0],
       });
 
-      // 2. Upload photos if any
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
       }
 
-      // 3. Clear the store
       reset();
-
-      // 4. Go to the new dump
       navigation.replace('DumpDetail', { dumpId: dump.id });
     } catch (error) {
       console.error(error);
@@ -113,7 +103,7 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Header showBack rightLabel={`${uris.length}/${maxPhotos}`} />
+      <Header showBack rightLabel={`${photoUris.length}/${maxPhotos}`} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -121,14 +111,13 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
       >
         <Text style={styles.eyebrow}>{title}</Text>
         <Text style={styles.subtitle}>
-          {uris.length === 0
+          {photoUris.length === 0
             ? 'No photos selected yet'
-            : `${uris.length} photo${uris.length > 1 ? 's' : ''} selected`}
+            : `${photoUris.length} photo${photoUris.length > 1 ? 's' : ''} selected`}
         </Text>
 
-        {/* Photo Grid */}
         <View style={styles.grid}>
-          {uris.map((uri, index) => (
+          {photoUris.map((uri, index) => (
             <View key={uri + index} style={styles.item}>
               <Image source={{ uri }} style={styles.image} />
               <Pressable
@@ -140,7 +129,6 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
             </View>
           ))}
 
-          {/* Add more button */}
           {canAddMore && (
             <Pressable style={styles.addButton} onPress={handleAddMore}>
               <Text style={styles.addIcon}>+</Text>
@@ -150,23 +138,17 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      {/* Bottom CTA */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
         <Pressable
           style={[
             styles.confirmButton,
-            uris.length === 0 && styles.confirmButtonDisabled,
+            loading && styles.confirmButtonDisabled,
           ]}
-          disabled={uris.length === 0}
+          disabled={loading}
           onPress={handleConfirm}
         >
-          <Text
-            style={[
-              styles.confirmText,
-              uris.length === 0 && styles.confirmTextDisabled,
-            ]}
-          >
-            {confirmLabel}  ↗
+          <Text style={styles.confirmText}>
+            {loading ? 'CREATING...' : `${confirmLabel}  ↗`}
           </Text>
         </Pressable>
       </View>

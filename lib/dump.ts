@@ -105,22 +105,35 @@ export async function testUpload() {
 
 // Add multiple photos to a dump
 export async function addPhotosToDump(dumpId: string, uris: string[]) {
-  const uploadedUrls: string[] = [];
+  console.log('addPhotosToDump called with:', { dumpId, count: uris.length });
+
+  const rows = [];
 
   for (const uri of uris) {
+    console.log('Uploading photo:', uri);
     const url = await uploadPhoto(uri);
-    uploadedUrls.push(url);
-  }
+    console.log('Uploaded URL:', url);
 
-  const { error } = await supabase.from('photos').insert(
-    uploadedUrls.map((url) => ({
+    rows.push({
       dump_id: dumpId,
       url,
-    }))
-  );
+    });
+  }
 
-  if (error) throw error;
-  return uploadedUrls;
+  console.log('Inserting rows into photos table:', rows);
+
+  const { data, error } = await supabase
+    .from('photos')
+    .insert(rows)
+    .select();
+
+  if (error) {
+    console.log('photos insert error:', error);
+    throw error;
+  }
+
+  console.log('photos insert success:', data);
+  return data;
 }
 
 // Get a dump by invite code
