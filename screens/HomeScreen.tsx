@@ -4,6 +4,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  Text,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -26,6 +27,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export default function HomeScreen({ navigation }: Props) {
   const [showDumps, setShowDumps] = useState(true);
 
+  const totalCount = ACTIVE_DUMPS.length + ARCHIVED_DUMPS.length;
+
   return (
     <SafeAreaView style={styles.safe}>
       <Header
@@ -40,6 +43,16 @@ export default function HomeScreen({ navigation }: Props) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
+          {/* Title block */}
+          <Text style={styles.eyebrow}>YOUR NIGHT, EVERY POV</Text>
+
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>DUMPS</Text>
+            <Text style={styles.totalCount}>
+              {String(totalCount).padStart(2, '0')}
+            </Text>
+          </View>
+
           <ActiveDumpsCarousel
             dumps={ACTIVE_DUMPS}
             navigation={navigation}
@@ -64,9 +77,35 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
   content: {
-    padding: 26,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 50,
+  },
+  eyebrow: {
+    color: Colors.accent,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2.2,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginTop: 12,
+    marginBottom: 28,
+  },
+  title: {
+    color: Colors.text,
+    fontSize: 64,
+    lineHeight: 60,
+    fontWeight: '900',
+    letterSpacing: -2.5,
+  },
+  totalCount: {
+    color: '#666',
+    fontSize: 18,
+    fontWeight: '900',
+    marginTop: 8,
   },
 });
