@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
 
   largeCard: {
-    height: 500,
+    height: 400,
   },
 
   smallCard: {
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: 330,
+    height: 200,
     backgroundColor: 'rgba(0,0,0,0.94)',
   },
 
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
    * Moving with the card
    */
   content: {
-    paddingHorizontal: 28,
+    paddingHorizontal: 8,
     paddingBottom: 38,
 
     zIndex: 2,
@@ -288,8 +288,7 @@ const styles = StyleSheet.create({
   },
 
   bottomRow: {
-    marginTop: 39,
-
+    marginTop: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
