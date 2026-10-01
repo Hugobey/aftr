@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   View,
@@ -30,24 +29,30 @@ export default function HomeScreen({ navigation }: Props) {
   const [showDumps, setShowDumps] = useState(true);
   const insets = useSafeAreaInsets();
 
-
   const totalCount = ACTIVE_DUMPS.length + ARCHIVED_DUMPS.length;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <Header
-        variant="home"
-        onPlusPress={() => navigation.navigate('CreateDump')}
-        onScanPress={() => navigation.navigate('JoinDump')}
-        onLogoLongPress={() => setShowDumps((prev) => !prev)}
-      />
+    <View style={styles.screen}>
+      {/* Restore header position */}
+      <View style={{ paddingTop: insets.top }}>
+        <Header
+          variant="home"
+          onPlusPress={() => navigation.navigate('CreateDump')}
+          onScanPress={() => navigation.navigate('JoinDump')}
+          onLogoLongPress={() => setShowDumps((prev) => !prev)}
+        />
+      </View>
 
       {showDumps ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[
+            styles.content,
+            {
+              paddingBottom: 100 + insets.bottom,
+            },
+          ]}
         >
-          {/* Title block */}
           <Text style={styles.eyebrow}>YOUR NIGHT, EVERY POV</Text>
 
           <View style={styles.titleRow}>
@@ -66,15 +71,13 @@ export default function HomeScreen({ navigation }: Props) {
             dumps={ARCHIVED_DUMPS}
             navigation={navigation}
           />
-
-          {/* <JoinDumpButton navigation={navigation} /> */}
         </ScrollView>
-        
       ) : (
-        <EmptyState navigation={navigation} />
+        <View style={styles.emptyContainer}>
+          <EmptyState navigation={navigation} />
+        </View>
       )}
 
-      {/* Fixed CTA */}
       <View
         style={[
           styles.fixedButton,
@@ -85,27 +88,31 @@ export default function HomeScreen({ navigation }: Props) {
       >
         <JoinDumpButton navigation={navigation} />
       </View>
-      
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  screen: {
     flex: 1,
     backgroundColor: Colors.background,
   },
+
   content: {
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 50,
+
+    // Space for the fixed CTA.
+    paddingBottom: 100,
   },
+
   eyebrow: {
     color: Colors.accent,
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 2.2,
   },
+
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -113,6 +120,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 28,
   },
+
   title: {
     color: Colors.text,
     fontSize: 64,
@@ -120,15 +128,21 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: -2.5,
   },
+
   totalCount: {
     color: '#666',
     fontSize: 18,
     fontWeight: '900',
     marginTop: 8,
   },
-   fixedButton: {
+
+  fixedButton: {
     position: 'absolute',
     left: 26,
     right: 26,
+  },
+
+  emptyContainer: {
+    flex: 1,
   },
 });

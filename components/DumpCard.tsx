@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
    * Moving with the card
    */
   content: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 20,
     paddingBottom: 38,
 
     zIndex: 2,
@@ -274,8 +274,8 @@ const styles = StyleSheet.create({
 
   title: {
     color: '#fff',
-    fontSize: 50,
-    lineHeight: 49,
+    fontSize: 40,
+    lineHeight: 39,
     letterSpacing: -3.5,
     fontWeight: '900',
     textTransform: 'uppercase',
