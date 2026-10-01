@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import Icon from './Icon';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../App';
 import { Colors } from '../constants/Colors';
@@ -10,27 +11,45 @@ type Props = {
 export default function JoinDumpButton({ navigation }: Props) {
   return (
     <Pressable
-      style={styles.button}
+      style={({ pressed }) => [
+        styles.button,
+        pressed && styles.buttonPressed,
+      ]}
       onPress={() => navigation.navigate('JoinDump')}
     >
-      <Text style={styles.text}>⌗  JOIN A DUMP</Text>
+      <Icon
+        name='scan'
+        size={22}
+        color="#000"
+      />
+
+      <Text style={styles.text}>JOIN A DUMP</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    height: 100,
-    borderColor: Colors.text,
-    borderWidth: 1,
-    marginTop: 40,
+    height: 64,
+    backgroundColor: Colors.accent,
+
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+
+    gap: 10,
+
+    borderRadius: 0,
+  },
+
+  buttonPressed: {
+    opacity: 0.8,
   },
 
   text: {
-    color: Colors.text,
+    color: '#000',
     fontWeight: '900',
-    fontSize: 17,
+    fontSize: 16,
+    letterSpacing: 1.2,
   },
 });

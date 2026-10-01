@@ -7,6 +7,8 @@ import {
   Text,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 import type { RootStackParamList } from '../App';
 import { Colors } from '../constants/Colors';
@@ -26,6 +28,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
   const [showDumps, setShowDumps] = useState(true);
+  const insets = useSafeAreaInsets();
+
 
   const totalCount = ACTIVE_DUMPS.length + ARCHIVED_DUMPS.length;
 
@@ -63,11 +67,25 @@ export default function HomeScreen({ navigation }: Props) {
             navigation={navigation}
           />
 
-          <JoinDumpButton navigation={navigation} />
+          {/* <JoinDumpButton navigation={navigation} /> */}
         </ScrollView>
+        
       ) : (
         <EmptyState navigation={navigation} />
       )}
+
+      {/* Fixed CTA */}
+      <View
+        style={[
+          styles.fixedButton,
+          {
+            bottom: insets.bottom + 16,
+          },
+        ]}
+      >
+        <JoinDumpButton navigation={navigation} />
+      </View>
+      
     </SafeAreaView>
   );
 }
@@ -107,5 +125,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     marginTop: 8,
+  },
+   fixedButton: {
+    position: 'absolute',
+    left: 26,
+    right: 26,
   },
 });
