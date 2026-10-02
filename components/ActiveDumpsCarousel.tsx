@@ -89,7 +89,7 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: 36,
+    // marginBottom: 36,
   },
   header: {
     flexDirection: 'row',

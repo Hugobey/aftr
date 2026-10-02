@@ -49,7 +49,7 @@ export default function HomeScreen({ navigation }: Props) {
           contentContainerStyle={[
             styles.content,
             {
-              paddingBottom: insets.bottom,
+              paddingBottom: insets.bottom - 16,
             },
           ]}
         >
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 16,
 
     // Space for the fixed CTA.
     // paddingBottom: 16,
@@ -118,7 +118,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginTop: 12,
-    // marginBottom: 28,
+    marginBottom: 8,
+    // backgroundColor: 'red'
   },
 
   title: {
