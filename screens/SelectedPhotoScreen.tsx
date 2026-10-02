@@ -16,7 +16,7 @@ import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
 import { useCreateDumpStore } from '../store/createDumpStore';
-import { createDump, addPhotosToDump, debugStorage, testUpload } from '../lib/dump';
+import { createDump, addPhotosToDump } from '../lib/dump';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
 
@@ -89,7 +89,7 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
-      }
+      };
 
       reset();
       navigation.replace('DumpDetail', { dumpId: dump.id });

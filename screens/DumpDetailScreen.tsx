@@ -15,6 +15,7 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { CommonActions } from '@react-navigation/native';
+import PhotoViewer from '../components/PhotoViewer';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -29,6 +30,7 @@ const PHOTOS = [
   'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=85',
   'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=85',
 ];
+const photos = PHOTOS; // later: dump.photos.map(p => p.url)
 
 export default function DumpDetailScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
@@ -91,7 +93,12 @@ export default function DumpDetailScreen({ navigation }: Props) {
         {/* Grid Header */}
         <View style={styles.gridHeader}>
           <Text style={styles.gridLabel}>EVERYONE’S POV</Text>
-          <Pressable>
+          <Pressable onPress={() => navigation.navigate('SelectedPhotos', {
+            initialUris: [],
+            maxPhotos: 10,
+            title: 'PHOTOS',
+            confirmLabel: 'ADD PHOTOS',
+          })}>
             <Text style={styles.addYours}>＋  ADD YOURS</Text>
           </Pressable>
         </View>
@@ -118,28 +125,19 @@ export default function DumpDetailScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Fullscreen Viewer */}
-      <Modal
+      {/* <Modal
         visible={viewerIndex !== null}
         animationType="fade"
         transparent={false}
         onRequestClose={closeViewer}
-      >
-        <View style={[styles.viewer, { paddingTop: insets.top }]}>
-          <Image
-            source={{
-              uri: viewerIndex === null ? COVER_PHOTO : PHOTOS[viewerIndex],
-            }}
-            style={styles.viewerImage}
-            resizeMode="contain"
-          />
-
-          <Pressable style={styles.closeButton} onPress={closeViewer}>
-            <Text style={styles.closeText}>×</Text>
-          </Pressable>
-
-          <Text style={styles.viewerHint}>TAP × TO CLOSE</Text>
-        </View>
-      </Modal>
+      > */}
+        <PhotoViewer
+          visible={viewerIndex !== null}
+          initialIndex={viewerIndex ?? 0}
+          photos={photos}
+          onClose={() => setViewerIndex(null)}
+        />
+      {/* </Modal> */}
     </View>
   );
 }
@@ -269,8 +267,8 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         position: 'absolute',
-        right: 24,
-        top: 16,
+        right: 20,
+        top: 70,
         width: 48,
         height: 48,
         borderWidth: 1,

@@ -16,8 +16,7 @@ export async function createDumpFlow({
 }: CreateDumpParams) {
   if (!name.trim()) {
     throw new Error('Dump name is required');
-  }
-
+  };
   // Create the dump in Supabase
   const dump = await createDump({
     name: name.trim(),

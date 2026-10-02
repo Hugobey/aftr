@@ -1,13 +1,32 @@
-import { supabase } from './supabase';
 import { File } from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
+import { supabase } from './supabase';
 
-// Generate a short invite code
 function generateInviteCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
+export async function uploadPhoto(uri: string): Promise<string> {
+  const file = new File(uri);
+  const base64 = await file.base64();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+
+  const { error } = await supabase.storage
+    .from('dump-photos')
+    .upload(fileName, decode(base64), {
+      contentType: 'image/jpeg',
+      upsert: false,
+    });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage
+    .from('dump-photos')
+    .getPublicUrl(fileName);
+
+  return data.publicUrl;
 }
 
-// Create a new Dump
 export async function createDump({
   name,
   coverUri,
@@ -19,13 +38,11 @@ export async function createDump({
   date?: string;
   isOpen?: boolean;
 }) {
-  let cover_url = null;
+  let cover_url: string | null = null;
 
-  // Upload cover if exists
   if (coverUri) {
     cover_url = await uploadPhoto(coverUri);
-  }
-
+  };
   const { data, error } = await supabase
     .from('dumps')
     .insert({
@@ -42,101 +59,54 @@ export async function createDump({
   return data;
 };
 
-export async function debugStorage() {
-  console.log('=== STORAGE DEBUG ===');
-
-  // 1. List all buckets
-  const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-  console.log('Buckets:', buckets);
-  console.log('Buckets error:', bucketsError);
-
-  // 2. Try uploading to the root (no folder)
-  const testPath = `test-${Date.now()}.jpg`;
-  console.log('Trying simple path:', testPath);
-}
-
-// Upload a photo to Supabase Storage
-export async function uploadPhoto(uri: string): Promise<string> {
-  const file = new File(uri);
-  const base64 = await file.base64();
-
-  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-  const filePath = fileName; // root of the bucket is fine for MVP
-
-  const { error } = await supabase.storage
-    .from('dump-photos')
-    .upload(filePath, decode(base64), {
-      contentType: 'image/jpeg',
-      upsert: false,
-    });
-
-  if (error) throw error;
-
-  const { data } = supabase.storage
-    .from('dump-photos')
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
-}
-
-export async function testUpload() {
-  console.log('Testing real upload...');
-
-  const filePath = `test-${Date.now()}.jpg`;
-  const fakeBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='; // 1x1 px png
-
-  const { data, error } = await supabase.storage
-    .from('dump-photos')
-    .upload(filePath, decode(fakeBase64), {
-      contentType: 'image/png',
-      upsert: true,
-    });
-
-  console.log('Upload data:', data);
-  console.log('Upload error:', error);
-
-  if (!error) {
-    const { data: urlData } = supabase.storage
-      .from('dump-photos')
-      .getPublicUrl(filePath);
-    console.log('Public URL:', urlData.publicUrl);
-  }
-}
-
-// Add multiple photos to a dump
 export async function addPhotosToDump(dumpId: string, uris: string[]) {
-  console.log('addPhotosToDump called with:', { dumpId, count: uris.length });
+  if (!uris.length) return [];
 
   const rows = [];
 
   for (const uri of uris) {
-    console.log('Uploading photo:', uri);
     const url = await uploadPhoto(uri);
-    console.log('Uploaded URL:', url);
-
-    rows.push({
-      dump_id: dumpId,
-      url,
-    });
+    rows.push({ dump_id: dumpId, url });
   }
-
-  console.log('Inserting rows into photos table:', rows);
 
   const { data, error } = await supabase
     .from('photos')
     .insert(rows)
     .select();
 
-  if (error) {
-    console.log('photos insert error:', error);
-    throw error;
-  }
-
-  console.log('photos insert success:', data);
+  if (error) throw error;
   return data;
 }
 
-// Get a dump by invite code
+export async function getDumps() {
+  const { data, error } = await supabase
+    .from('dumps')
+    .select(`
+      id,
+      name,
+      cover_url,
+      date,
+      is_open,
+      created_at,
+      photos ( id )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getDump(dumpId: string) {
+  const { data, error } = await supabase
+    .from('dumps')
+    .select('*, photos(*)')
+    .eq('id', dumpId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export async function getDumpByInviteCode(code: string) {
   const { data, error } = await supabase
     .from('dumps')
@@ -146,4 +116,4 @@ export async function getDumpByInviteCode(code: string) {
 
   if (error) throw error;
   return data;
-}
+};
