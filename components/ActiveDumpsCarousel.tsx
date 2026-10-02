@@ -22,15 +22,20 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const cardWidth = width - 52; // matches horizontal page padding (26 * 2)
+  const cardWidth = width - 52;
   const separator = 8;
   const snapInterval = cardWidth + separator;
 
   if (dumps.length === 0) return null;
 
+  const isSingle = dumps.length === 1;
+
+  const openDump = (id: string) => {
+    navigation.navigate('DumpDetail', { dumpId: id });
+  };
+
   return (
     <View style={styles.wrapper}>
-      {/* Section header */}
       <View style={styles.header}>
         <Text style={styles.label}>ACTIVE / RECENT</Text>
         <Text style={styles.count}>
@@ -38,40 +43,46 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
         </Text>
       </View>
 
-      {/* Carousel */}
-      <FlatList
-        data={dumps}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={snapInterval}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        contentContainerStyle={styles.carousel}
-        ItemSeparatorComponent={() => <View style={{ width: separator }} />}
-        onMomentumScrollEnd={(event) => {
-          const index = Math.round(
-            event.nativeEvent.contentOffset.x / snapInterval,
-          );
-          setActiveIndex(Math.min(Math.max(index, 0), dumps.length - 1));
-        }}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <Pressable
-            style={{ width: cardWidth }}
-            onPress={() =>
-              navigation.navigate('DumpDetail', { dumpId: item.id })
-            }
-          >
-            <DumpCard
-              dump={item}
-              large
-            />
-          </Pressable>
-        )}
-      />
+      {isSingle ? (
+        // One dump → no horizontal scroll
+        <Pressable
+          style={{ width: cardWidth }}
+          onPress={() => openDump(dumps[0].id)}
+        >
+          <DumpCard dump={dumps[0]} large />
+        </Pressable>
+      ) : (
+        <>
+          <FlatList
+            data={dumps}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={snapInterval}
+            decelerationRate="fast"
+            disableIntervalMomentum
+            ItemSeparatorComponent={() => <View style={{ width: separator }} />}
+            onMomentumScrollEnd={(event) => {
+              const index = Math.round(
+                event.nativeEvent.contentOffset.x / snapInterval,
+              );
+              setActiveIndex(
+                Math.min(Math.max(index, 0), dumps.length - 1),
+              );
+            }}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <Pressable
+                style={{ width: cardWidth }}
+                onPress={() => openDump(item.id)}
+              >
+                <DumpCard dump={item} large />
+              </Pressable>
+            )}
+          />
 
-      {/* Hint under card — matches screenshot */}
-      <Text style={styles.hint}>SWIPE THROUGH YOUR DUMPS</Text>
+          <Text style={styles.hint}>SWIPE THROUGH YOUR DUMPS</Text>
+        </>
+      )}
     </View>
   );
 }
@@ -97,9 +108,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '900',
     letterSpacing: 1.4,
-  },
-  carousel: {
-    // no extra right padding if page already has 26
   },
   hint: {
     marginTop: 14,
