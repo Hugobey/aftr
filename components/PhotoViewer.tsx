@@ -1,5 +1,5 @@
 // components/PhotoViewer.tsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -31,6 +31,7 @@ export default function PhotoViewer({
 }: Props) {
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList>(null);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
 
   useEffect(() => {
     if (visible && listRef.current) {
@@ -63,14 +64,17 @@ export default function PhotoViewer({
             offset: width * index,
             index,
           })}
-          renderItem={({ item }) => (
+          onMomentumScrollEnd={(e) => {
+            const index = Math.round(e.nativeEvent.contentOffset.x / width);
+            setActiveIndex(index);
+          }}
+          renderItem={({ item, index }) => (
             <View style={styles.page}>
-              <ZoomableImage uri={item} />
-              {/* <Image
-                source={{ uri: item }}
-                style={styles.image}
-                resizeMode="contain"
-              /> */}
+             <ZoomableImage
+              uri={item}
+              isActive={index === activeIndex}
+            />
+             
             </View>
           )}
         />
