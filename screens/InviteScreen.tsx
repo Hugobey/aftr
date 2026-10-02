@@ -1,34 +1,80 @@
-import { Pressable, SafeAreaView, Share, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
+
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
+import { getDump } from '../lib/dump';
+import Icon from '../components/Icon';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Invite'>;
 
-const INVITE_URL = 'https://aftr.app/join/no-sleep';
+export default function InviteScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
+  const dumpId = route.params?.dumpId;
 
-export default function InviteScreen({ navigation }: Props) {
+  const [title, setTitle] = useState('YOUR DUMP');
+  const [inviteUrl, setInviteUrl] = useState(`https://aftr.app/join/${dumpId ?? ''}`);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!dumpId) return;
+
+    (async () => {
+      try {
+        const dump = await getDump(dumpId);
+        if (dump?.name) setTitle(dump.name);
+        if (dump?.invite_code) {
+          setInviteUrl(`https://aftr.app/join/${dump.invite_code}`);
+        }
+      } catch (e) {
+        console.log('Invite load error', e);
+      }
+    })();
+  }, [dumpId]);
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Join my Dump: ${INVITE_URL}`,
-        url: INVITE_URL,
+        message: `Join my Dump on Aftr: ${inviteUrl}`,
+        url: inviteUrl,
       });
-    } catch (error) {
-      console.log('Share error:', error);
+    } catch (e) {
+      console.log('Share error:', e);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <Header showBack rightLabel="LIVE" />
+    <View style={styles.screen}>
+      <View style={{ paddingTop: insets.top }}>
+        <Header showBack rightLabel="LIVE" />
+      </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        <Text style={styles.eyebrow}>NO SLEEP TILL MONDAY</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: insets.bottom },
+        ]}
+      >
+        <Text style={styles.eyebrow}>{title.toUpperCase()}</Text>
 
         <Text style={styles.title}>
           MORE EYES.{`\n`}BETTER{`\n`}DUMP.
@@ -38,23 +84,28 @@ export default function InviteScreen({ navigation }: Props) {
           Invite the group. One link, every POV.
         </Text>
 
-        {/* QR Code */}
         <View style={styles.qrContainer}>
           <QRCode
-            value={INVITE_URL}
-            size={220}
+            value={inviteUrl}
+            size={200}
             color="#000"
             backgroundColor="#fff"
           />
         </View>
 
-        <Text style={styles.expiry}>SCAN TO JOIN · EXPIRES IN 48H</Text>
-      </View>
+        <Text style={styles.expiry}>SCAN TO JOIN</Text>
+      </ScrollView>
 
-      {/* Bottom Actions */}
-      <View style={styles.bottom}>
-        <Pressable style={styles.copyButton} onPress={handleShare}>
-          <Text style={styles.copyText}>⌁   COPY INVITE LINK</Text>
+      <View style={[styles.bottom, { paddingBottom: insets.bottom - 20 }]}>
+        <Pressable style={styles.copyButton} onPress={handleCopy}>
+          {copied ? (
+            <Icon name="check" size={20} color="#000" />
+          ) : (
+            <Icon name="link" size={20} color="#000" />
+          ) }
+          <Text style={styles.copyText}>
+            {copied ? 'LINK COPIED' : 'COPY INVITE LINK'}
+          </Text>
         </Pressable>
 
         <View style={styles.shareRow}>
@@ -68,94 +119,92 @@ export default function InviteScreen({ navigation }: Props) {
             <Text style={styles.socialSmall}>WHATSAPP</Text>
           </Pressable>
 
-          <Pressable style={[styles.shareBox, styles.shareBoxLast]} onPress={handleShare}>
+          <Pressable
+            style={[styles.shareBox, styles.shareBoxLast]}
+            onPress={handleShare}
+          >
             <Text style={styles.social}>•••</Text>
             <Text style={styles.socialSmall}>MORE</Text>
           </Pressable>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  screen: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-//   divider: {
-//     height: StyleSheet.hairlineWidth,
-//     backgroundColor: '#222',
-//     marginHorizontal: 18,
-//   },
   content: {
-    flex: 1,
-    paddingHorizontal: 38,
+    paddingHorizontal: 20,
     alignItems: 'center',
   },
   eyebrow: {
     color: '#999',
-    fontSize: 15,
-    letterSpacing: 2.4,
+    fontSize: 13,
+    letterSpacing: 2.2,
     fontWeight: '900',
-    marginTop: 48,
+    marginTop: 8,
+    textAlign: 'center',
   },
   title: {
     color: Colors.text,
-    fontSize: 57,
-    lineHeight: 53,
-    letterSpacing: -2.6,
+    fontSize: 48,
+    lineHeight: 46,
+    letterSpacing: -2.2,
     fontWeight: '900',
     textAlign: 'center',
-    marginTop: 30,
+    marginTop: 20,
   },
   subtitle: {
     color: '#999',
-    fontSize: 19,
+    fontSize: 16,
     textAlign: 'center',
-    marginTop: 32,
+    marginTop: 20,
   },
   qrContainer: {
     backgroundColor: '#fff',
-    padding: 28,
-    borderRadius: 3,
-    marginTop: 48,
+    padding: 22,
+    marginTop: 36,
   },
   expiry: {
     color: '#777',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1.6,
-    marginTop: 32,
+    marginTop: 24,
   },
   bottom: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#333',
-    padding: 30,
-    gap: 19,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 12,
   },
   copyButton: {
     backgroundColor: Colors.accent,
-    height: 72,
+    height: 64,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 22,
+    flexDirection: 'row',
+    gap: 12,
   },
   copyText: {
     color: '#000',
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '900',
   },
   shareRow: {
-    height: 105,
+    height: 60,
     flexDirection: 'row',
   },
   shareBox: {
     flex: 1,
     backgroundColor: '#101010',
     borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: '#444',
+    borderRightColor: '#333',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -164,14 +213,14 @@ const styles = StyleSheet.create({
   },
   social: {
     color: Colors.text,
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '900',
   },
   socialSmall: {
-    color: '#999',
-    fontSize: 11,
+    color: '#888',
+    fontSize: 10,
     fontWeight: '900',
-    letterSpacing: 1.3,
-    marginTop: 10,
+    letterSpacing: 1.2,
+    marginTop: 8,
   },
 });
