@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
+import ZoomableImage from './ZoomableImage';
 
 type Props = {
   photos: string[];
@@ -64,11 +65,12 @@ export default function PhotoViewer({
           })}
           renderItem={({ item }) => (
             <View style={styles.page}>
-              <Image
+              <ZoomableImage uri={item} />
+              {/* <Image
                 source={{ uri: item }}
                 style={styles.image}
                 resizeMode="contain"
-              />
+              /> */}
             </View>
           )}
         />

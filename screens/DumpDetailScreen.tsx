@@ -125,19 +125,12 @@ export default function DumpDetailScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Fullscreen Viewer */}
-      {/* <Modal
-        visible={viewerIndex !== null}
-        animationType="fade"
-        transparent={false}
-        onRequestClose={closeViewer}
-      > */}
         <PhotoViewer
           visible={viewerIndex !== null}
           initialIndex={viewerIndex ?? 0}
           photos={photos}
           onClose={() => setViewerIndex(null)}
         />
-      {/* </Modal> */}
     </View>
   );
 }
@@ -253,42 +246,5 @@ const styles = StyleSheet.create({
     photoImage: {
         width: '100%',
         height: '100%',
-    },
-
-    // Viewer
-    viewer: {
-        flex: 1,
-        backgroundColor: '#000',
-        justifyContent: 'center',
-    },
-    viewerImage: {
-        width: '100%',
-        height: '78%',
-    },
-    closeButton: {
-        position: 'absolute',
-        right: 20,
-        top: 70,
-        width: 48,
-        height: 48,
-        borderWidth: 1,
-        borderColor: '#555',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    closeText: {
-        fontSize: 32,
-        color: Colors.text,
-        fontWeight: '200',
-    },
-    viewerHint: {
-        position: 'absolute',
-        bottom: 48,
-        width: '100%',
-        textAlign: 'center',
-        color: '#777',
-        fontSize: 12,
-        fontWeight: '900',
-        letterSpacing: 1.4,
     },
 });

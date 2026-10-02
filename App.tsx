@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet, View } from 'react-native';
 import { Colors } from './constants/Colors';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Temporary placeholder screens
 import HomeScreen from './screens/HomeScreen';
@@ -30,22 +30,24 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="CreateDump" component={CreateDumpScreen} />
-        <Stack.Screen name="JoinDump" component={JoinDumpScreen} />
-        <Stack.Screen name="DumpDetail" component={DumpDetailScreen} />
-        <Stack.Screen name="Invite" component={InviteScreen} />
-        <Stack.Screen name="SelectedPhotos" component={SelectedPhotosScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <StatusBar style="light" />
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background },
+            animation: 'fade',
+          }}
+        >
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="CreateDump" component={CreateDumpScreen} />
+          <Stack.Screen name="JoinDump" component={JoinDumpScreen} />
+          <Stack.Screen name="DumpDetail" component={DumpDetailScreen} />
+          <Stack.Screen name="Invite" component={InviteScreen} />
+          <Stack.Screen name="SelectedPhotos" component={SelectedPhotosScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
