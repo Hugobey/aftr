@@ -22,7 +22,7 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const cardWidth = width - 52;
+  const cardWidth = width - 40;
   const separator = 8;
   const snapInterval = cardWidth + separator;
 

@@ -23,16 +23,16 @@ export const ACTIVE_DUMPS: Dump[] = [
     live: true,
     host: true,
   },
-  // {
-  //   id: 'rooftop',
-  //   title: 'ROOFTOP\nSEASON',
-  //   date: '11 JUL 2026',
-  //   photos: '94 PHOTOS',
-  //   people: '18 PEOPLE',
-  //   image:
-  //     'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=85&sat=-100',
-  //   live: true,
-  // },
+  {
+    id: 'rooftop',
+    title: 'ROOFTOP\nSEASON',
+    date: '11 JUL 2026',
+    photos: '94 PHOTOS',
+    people: '18 PEOPLE',
+    image:
+      'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=85&sat=-100',
+    live: true,
+  },
 ];
 
 export const ARCHIVED_DUMPS: Dump[] = [

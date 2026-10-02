@@ -49,7 +49,7 @@ export default function HomeScreen({ navigation }: Props) {
           contentContainerStyle={[
             styles.content,
             {
-              paddingBottom: 100 + insets.bottom,
+              paddingBottom: insets.bottom,
             },
           ]}
         >
@@ -80,9 +80,9 @@ export default function HomeScreen({ navigation }: Props) {
 
       <View
         style={[
-          styles.fixedButton,
+          styles.bottomBar,
           {
-            bottom: insets.bottom + 16,
+            bottom: insets.bottom,
           },
         ]}
       >
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
 
     // Space for the fixed CTA.
-    paddingBottom: 100,
+    // paddingBottom: 16,
   },
 
   eyebrow: {
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginTop: 12,
-    marginBottom: 28,
+    // marginBottom: 28,
   },
 
   title: {
@@ -136,11 +136,17 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  fixedButton: {
-    position: 'absolute',
-    left: 26,
-    right: 26,
-  },
+  bottomBar: {
+    // position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -16,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    backgroundColor: Colors.background, // pure black
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#222',
+},
 
   emptyContainer: {
     flex: 1,

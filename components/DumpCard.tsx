@@ -189,7 +189,6 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-
     paddingHorizontal: 25,
     paddingTop: 24,
 
