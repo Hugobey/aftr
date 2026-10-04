@@ -61,7 +61,7 @@ function mapDump(row: any): DumpUI {
   };
 }
 
-export const useDumpsStore = create<DumpsState>((set) => ({
+export const useDumpsStore = create<DumpsState>((set, get) => ({
   dumps: [],
   current: null,
   loadingList: false,
@@ -79,12 +79,22 @@ export const useDumpsStore = create<DumpsState>((set) => ({
   },
 
   fetchDump: async (id: string) => {
-    set({ loadingDetail: true, error: null });
+    const cached = get().dumps.find((d) => d.id === id);
+
+    if (cached) {
+      set({ current: cached, loadingDetail: false, error: null });
+    } else {
+      set({ loadingDetail: true, error: null });
+    }
+
     try {
       const row = await getDump(id);
       set({ current: mapDump(row), loadingDetail: false });
     } catch (e: any) {
-      set({ error: e.message ?? 'Failed to load dump', loadingDetail: false });
+      set({
+        error: e.message ?? 'Failed to load dump',
+        loadingDetail: false,
+      });
     }
   },
 

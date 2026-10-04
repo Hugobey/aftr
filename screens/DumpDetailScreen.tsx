@@ -35,13 +35,13 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     fetchDump(dumpId);
-    return () => clearCurrent();
   }, [dumpId]);
 
   const photos = current?.photoUrls ?? [];
   const cover = current?.image ?? photos[0] ?? null;
-  // B&W only works for Unsplash-style URLs; real storage URLs stay as-is
-  const coverBw = `${cover}&sat=-100`;
+  const coverBw = cover;
+
+  console.log('cover pic in DUMP detail?', cover)
 
   if (loadingDetail && !current) {
     return (
