@@ -3,6 +3,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Colors } from './constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useEffect } from 'react';
+import { useDeviceStore } from './store/deviceStore';
+import { useDumpsStore } from './store/dumpStore';
 
 // Temporary placeholder screens
 import HomeScreen from './screens/HomeScreen';
@@ -29,6 +32,17 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+
+  const hydrated = useDeviceStore((s) => s.hydrated);
+  const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
+  const fetchDumps = useDumpsStore((s) => s.fetchDumps);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    ensureDeviceId();   // first launch → creates deviceId
+    fetchDumps();       // load real dumps into Zustand
+  }, [hydrated]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>

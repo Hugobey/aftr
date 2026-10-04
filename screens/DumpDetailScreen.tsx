@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Image,
   ImageBackground,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -38,7 +37,6 @@ export default function DumpDetailScreen({ navigation }: Props) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   const openViewer = (index: number) => setViewerIndex(index);
-  const closeViewer = () => setViewerIndex(null);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -113,6 +111,7 @@ export default function DumpDetailScreen({ navigation }: Props) {
               <Pressable
                 key={uri + index}
                 style={styles.photo}
+                delayLongPress={120} // ms — try 120–200
                 onLongPress={() => setLongPressedIndex(index)}
                 onPressOut={() => setLongPressedIndex(null)}
                 onPress={() => openViewer(index)}
