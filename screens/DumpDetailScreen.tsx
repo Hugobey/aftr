@@ -28,7 +28,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const current = useDumpsStore((s) => s.current);
   const loadingDetail = useDumpsStore((s) => s.loadingDetail);
   const fetchDump = useDumpsStore((s) => s.fetchDump);
-  const clearCurrent = useDumpsStore((s) => s.clearCurrent);
 
   const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -39,9 +38,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   const photos = current?.photoUrls ?? [];
   const cover = current?.image ?? photos[0] ?? null;
-  const coverBw = cover;
-
-  console.log('cover pic in DUMP detail?', cover)
 
   if (loadingDetail && !current) {
     return (
@@ -83,9 +79,11 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <ImageBackground
-          source={coverBw ? { uri: coverBw } : undefined}
+          source={cover ? { uri: cover } : undefined}
           style={styles.cover}
         >
+          {/* muted wash */}
+          <View style={styles.coverWash} />
           <View style={styles.coverOverlay} />
 
           {current.live && (
@@ -123,9 +121,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         <View style={styles.grid}>
           {photos.map((uri, index) => {
             const isColor = longPressedIndex === index;
-            const canBw = uri.includes('unsplash.com');
-            const imageUri =
-              !isColor && canBw ? `${uri}&sat=-100` : uri;
 
             return (
               <Pressable
@@ -136,7 +131,9 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
                 onPressOut={() => setLongPressedIndex(null)}
                 onPress={() => setViewerIndex(index)}
               >
-                <Image source={{ uri: imageUri }} style={styles.photoImage} />
+                <Image source={{ uri }} style={styles.photoImage} />
+                {/* wash off on long press */}
+                {!isColor && <View style={styles.photoWash} />}
               </Pressable>
             );
           })}
@@ -182,9 +179,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     backgroundColor: '#111',
   },
+  coverWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   textBackground: {
     position: 'absolute',
@@ -264,10 +265,15 @@ const styles = StyleSheet.create({
     width: '50%',
     height: 210,
     backgroundColor: '#111',
+    overflow: 'hidden',
   },
   photoImage: {
     width: '100%',
     height: '100%',
+  },
+  photoWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   noPhotos: {
     color: '#666',
