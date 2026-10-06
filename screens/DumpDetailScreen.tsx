@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +15,7 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
+import SkiaBwImage from '../components/SkiaBwImage';
 import { useDumpsStore } from '../store/dumpStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
@@ -78,12 +77,12 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ImageBackground
-          source={cover ? { uri: cover } : undefined}
-          style={styles.cover}
-        >
-          {/* muted wash */}
-          <View style={styles.coverWash} />
+        {/* Cover — always B&W */}
+        <View style={styles.cover}>
+          {cover && (
+            <SkiaBwImage uri={cover} bw style={StyleSheet.absoluteFillObject} />
+          )}
+
           <View style={styles.coverOverlay} />
 
           {current.live && (
@@ -101,7 +100,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
             <Text style={styles.title}>{current.title}</Text>
             <Text style={styles.stats}>{current.photos}</Text>
           </View>
-        </ImageBackground>
+        </View>
 
         <View style={styles.gridHeader}>
           <Text style={styles.gridLabel}>EVERYONE’S POV</Text>
@@ -131,9 +130,11 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
                 onPressOut={() => setLongPressedIndex(null)}
                 onPress={() => setViewerIndex(index)}
               >
-                <Image source={{ uri }} style={styles.photoImage} />
-                {/* wash off on long press */}
-                {!isColor && <View style={styles.photoWash} />}
+                <SkiaBwImage
+                  uri={uri}
+                  bw={!isColor}
+                  style={styles.photoImage}
+                />
               </Pressable>
             );
           })}
@@ -178,14 +179,11 @@ const styles = StyleSheet.create({
     height: 440,
     justifyContent: 'flex-end',
     backgroundColor: '#111',
-  },
-  coverWash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    overflow: 'hidden',
   },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   textBackground: {
     position: 'absolute',
@@ -270,10 +268,6 @@ const styles = StyleSheet.create({
   photoImage: {
     width: '100%',
     height: '100%',
-  },
-  photoWash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   noPhotos: {
     color: '#666',
