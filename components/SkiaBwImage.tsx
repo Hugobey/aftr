@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Image as RNImage,
+  LayoutChangeEvent,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import {
   Canvas,
-  Image as SkiaImage,
   ColorMatrix,
-  useImage,
   FilterMode,
+  Image as SkiaImage,
   MipmapMode,
+  useImage,
 } from '@shopify/react-native-skia';
 
 const GRAYSCALE = [
@@ -34,26 +41,37 @@ export default function SkiaBwImage({
 
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;
-    setSize({ width, height });
+    if (width > 0 && height > 0) setSize({ width, height });
   };
+
+  // Fallback while Skia loads / if it fails
+  if (!image || size.width === 0) {
+    return (
+      <View style={[styles.fill, style]} onLayout={onLayout}>
+        <RNImage
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+          resizeMode={fit}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.fill, style]} onLayout={onLayout}>
-      {image && size.width > 0 && (
-        <Canvas style={StyleSheet.absoluteFill}>
-          <SkiaImage
-            image={image}
-            x={0}
-            y={0}
-            width={size.width}
-            height={size.height}
-            fit={fit}
-            sampling={{ filter: FilterMode.Linear, mipmap: MipmapMode.None }}
-          >
-            {bw ? <ColorMatrix matrix={GRAYSCALE} /> : null}
-          </SkiaImage>
-        </Canvas>
-      )}
+      <Canvas style={{ width: size.width, height: size.height }}>
+        <SkiaImage
+          image={image}
+          x={0}
+          y={0}
+          width={size.width}
+          height={size.height}
+          fit={fit}
+          sampling={{ filter: FilterMode.Linear, mipmap: MipmapMode.None }}
+        >
+          {bw ? <ColorMatrix matrix={GRAYSCALE} /> : null}
+        </SkiaImage>
+      </Canvas>
     </View>
   );
 }

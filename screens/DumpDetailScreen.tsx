@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -37,6 +38,11 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   const photos = current?.photoUrls ?? [];
   const cover = current?.image ?? photos[0] ?? null;
+
+  const { width: screenWidth } = useWindowDimensions();
+  const COVER_HEIGHT = 440;
+
+  console.log('cover', cover);
 
   if (loadingDetail && !current) {
     return (
@@ -79,10 +85,13 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
       >
         {/* Cover — always B&W */}
         <View style={styles.cover}>
-          {cover && (
-            <SkiaBwImage uri={cover} bw style={StyleSheet.absoluteFillObject} />
+          {!!cover && (
+            <SkiaBwImage
+              uri={cover}
+              bw
+              style={{ width: screenWidth, height: COVER_HEIGHT }}
+            />
           )}
-
           <View style={styles.coverOverlay} />
 
           {current.live && (
