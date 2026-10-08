@@ -69,12 +69,19 @@ export const useDumpsStore = create<DumpsState>((set, get) => ({
   error: null,
 
   fetchDumps: async () => {
-    set({ loadingList: true, error: null });
+    // only show full-screen loader on first load
+    const isFirstLoad = get().dumps.length === 0;
+    if (isFirstLoad) set({ loadingList: true, error: null });
+    else set({ error: null });
+
     try {
       const rows = await getDumps();
       set({ dumps: rows.map(mapDump), loadingList: false });
     } catch (e: any) {
-      set({ error: e.message ?? 'Failed to load dumps', loadingList: false });
+      set({
+        error: e.message ?? 'Failed to load dumps',
+        loadingList: false,
+      });
     }
   },
 

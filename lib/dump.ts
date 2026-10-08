@@ -88,7 +88,8 @@ export async function getDumps() {
       date,
       is_open,
       created_at,
-      photos ( id )
+      invite_code,
+      photos ( id, url )
     `)
     .order('created_at', { ascending: false });
 

@@ -22,6 +22,10 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
+  console.log('Dumps in carousel', dumps)
+
+  if (!dumps?.length) return null;
+
   const cardWidth = width - 40;
   const separator = 8;
   const snapInterval = cardWidth + separator;
@@ -75,7 +79,7 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
                 style={{ width: cardWidth }}
                 onPress={() => openDump(item.id)}
               >
-                <DumpCard dump={item} large />
+                <DumpCard key={item.id} dump={item} large />
               </Pressable>
             )}
           />

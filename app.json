@@ -1,31 +1,28 @@
 {
   "expo": {
-    "name": "aftr",
+    "name": "Aftr",
     "slug": "aftr",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/after_logo.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/aftr-icon.png",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.squadflix.aftr"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/aftr-icon.png",
+        "backgroundColor": "#000000"
       },
-      "predictiveBackGestureEnabled": false,
+      "package": "com.squadflix.aftr",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
-      ],
-      "package": "com.squadflix.aftr"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/aftr-icon.png"
     },
     "plugins": [
       "expo-sharing",

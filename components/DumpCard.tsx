@@ -1,317 +1,172 @@
-import {
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../constants/Colors';
 import type { Dump } from '../data/dumps';
+import SkiaBwImage from './SkiaBwImage';
 
 type Props = {
   dump: Dump;
   large?: boolean;
 };
 
-export default function DumpCard({
-  dump,
-  large = false,
-}: Props) {
-  const role = dump.host ? 'HOST' : 'JOINED';
+export default function DumpCard({ dump, large = false }: Props) {
+  const coverUri = dump.image ?? dump.photoUrls?.[0] ?? null;
+  const cardHeight = large ? 400 : 180;
 
   return (
-    <ImageBackground
-      source={{ uri: dump.image }}
-      style={[
-        styles.card,
-        large ? styles.largeCard : styles.smallCard,
-      ]}
-      imageStyle={styles.cardImage}
-    >
-      {/* Image darkness */}
-      <View style={styles.imageOverlay} />
+    <View style={[styles.card, { height: cardHeight }]}>
+      {!!coverUri && (
+        <SkiaBwImage
+          key={coverUri}
+          uri={coverUri}
+          bw
+          style={{ width: '100%', height: cardHeight }}
+        />
+      )}
 
-      {/* Image → black transition */}
+      <View style={styles.imageOverlay} pointerEvents="none" />
+
       {large && (
         <>
           <View style={[styles.fade, styles.fade1]} />
           <View style={[styles.fade, styles.fade2]} />
           <View style={[styles.fade, styles.fade3]} />
-
           <View style={styles.bottomBlack} />
         </>
       )}
 
-      {/* =========================================
-          THIS ENTIRE CARD MOVES WITH THE FLATLIST
-          ========================================= */}
-
       <View style={styles.topRow}>
-        <View style={styles.badges}>
-          {dump.live && (
-            <View style={styles.liveBadge}>
-              <Text style={styles.liveText}>
-                LIVE
-              </Text>
-            </View>
-          )}
-
-          <View
-            style={[
-              styles.roleBadge,
-              dump.host
-                ? styles.hostBadge
-                : styles.joinedBadge,
-            ]}
-          >
-            <Text
-              style={[
-                styles.roleText,
-                dump.host
-                  ? styles.hostText
-                  : styles.joinedText,
-              ]}
-            >
-              {role}
-            </Text>
+        {dump.live && (
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveText}>LIVE</Text>
           </View>
-        </View>
+        )}
       </View>
 
-      {/* Bottom content also moves */}
-      <View
-        style={[
-          styles.content,
-          !large && styles.contentSmall,
-        ]}
-      >
-        <Text style={styles.date}>
-          {dump.date}
-        </Text>
-
-        <Text
-          style={[
-            styles.title,
-            !large && styles.titleSmall,
-          ]}
-        >
+      <View style={[styles.content, !large && styles.contentSmall]}>
+        <Text style={styles.date}>{dump.date}</Text>
+        <Text style={[styles.title, !large && styles.titleSmall]}>
           {dump.title}
         </Text>
 
         {large && (
           <View style={styles.bottomRow}>
-            <View style={styles.stats}>
-              <Text style={styles.stat}>
-                {dump.photos}
-              </Text>
-
-              <Text style={styles.stat}>
-                {dump.people}
-              </Text>
-            </View>
-
-            <Text style={styles.arrow}>
-              ↗
-            </Text>
+            <Text style={styles.stat}>{dump.photos}</Text>
+            <Text style={styles.arrow}>↗</Text>
           </View>
         )}
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#111',
     borderWidth: 1,
     borderColor: '#444',
-
     justifyContent: 'space-between',
   },
-
-  largeCard: {
-    height: 400,
-  },
-
-  smallCard: {
-    height: 180,
-  },
-
-  cardImage: {
-    opacity: 0.9,
-    resizeMode: 'cover',
-  },
-
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.28)',
   },
-
-  /*
-   * Image → black transition
-   */
   fade: {
     position: 'absolute',
     left: 0,
     right: 0,
   },
-
   fade1: {
-    top: 330,
-    height: 110,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    bottom: 180,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
-
   fade2: {
-    top: 390,
-    height: 130,
-    backgroundColor: 'rgba(0,0,0,0.38)',
+    bottom: 120,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
-
   fade3: {
-    top: 460,
-    height: 150,
-    backgroundColor: 'rgba(0,0,0,0.72)',
+    bottom: 60,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
-
   bottomBlack: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: 200,
-    backgroundColor: 'rgba(0,0,0,0.94)',
+    height: 80,
+    backgroundColor: 'rgba(0,0,0,0.92)',
   },
-
-  /*
-   * Moving with the card
-   */
   topRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 25,
-    paddingTop: 24,
-
+    paddingHorizontal: 20,
+    paddingTop: 20,
     zIndex: 2,
   },
-
-  badges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 9,
-  },
-
   liveBadge: {
     backgroundColor: Colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 44,
-    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-
   liveText: {
     color: '#000',
     fontWeight: '900',
-    fontSize: 13,
-    letterSpacing: 1.6,
+    fontSize: 12,
+    letterSpacing: 1.2,
   },
-
-  roleBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 11,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-
-  hostBadge: {
-    backgroundColor: Colors.accent,
-  },
-
-  joinedBadge: {
-    backgroundColor: 'rgba(0,0,0,0.72)',
-    borderWidth: 1,
-    borderColor: '#777',
-  },
-
-  roleText: {
-    fontWeight: '900',
-    fontSize: 13,
-    letterSpacing: 1.6,
-  },
-
-  hostText: {
-    color: '#000',
-  },
-
-  joinedText: {
-    color: '#fff',
-  },
-
-  /*
-   * Moving with the card
-   */
   content: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingHorizontal: 20,
-    paddingBottom: 38,
-
+    paddingBottom: 28,
     zIndex: 2,
   },
-
   contentSmall: {
-    paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingBottom: 16,
   },
-
   date: {
     color: Colors.accent,
-    fontSize: 14,
-    lineHeight: 17,
+    fontSize: 12,
     fontWeight: '900',
-    letterSpacing: 1.5,
-    marginBottom: 17,
+    letterSpacing: 1.4,
+    marginBottom: 12,
   },
-
   title: {
     color: '#fff',
-    fontSize: 40,
-    lineHeight: 39,
-    letterSpacing: -3.5,
+    fontSize: 36,
+    lineHeight: 36,
+    letterSpacing: -1.5,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
-
   titleSmall: {
-    fontSize: 24,
-    lineHeight: 25,
-    letterSpacing: -1,
+    fontSize: 22,
+    lineHeight: 24,
   },
-
   bottomRow: {
-    marginTop: 0,
+    marginTop: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-
-  stats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 34,
-  },
-
   stat: {
     color: '#aaa',
-    fontSize: 14,
-    lineHeight: 17,
+    fontSize: 12,
     fontWeight: '900',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
+    letterSpacing: 1.2,
   },
-
   arrow: {
     color: '#fff',
-    fontSize: 45,
-    lineHeight: 42,
+    fontSize: 28,
     fontWeight: '300',
   },
 });

@@ -46,7 +46,7 @@ export default function HomeScreen({ navigation }: Props) {
 
   const totalCount = dumps.length;
   const hasDumps = totalCount > 0;
-
+  
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top }}>
