@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
+  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  useWindowDimensions
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,7 +17,6 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
-import SkiaBwImage from '../components/SkiaBwImage';
 import { useDumpsStore } from '../store/dumpStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
@@ -28,6 +28,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const current = useDumpsStore((s) => s.current);
   const loadingDetail = useDumpsStore((s) => s.loadingDetail);
   const fetchDump = useDumpsStore((s) => s.fetchDump);
+  const clearCurrent = useDumpsStore((s) => s.clearCurrent);
 
   const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -38,11 +39,9 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   const photos = current?.photoUrls ?? [];
   const cover = current?.image ?? photos[0] ?? null;
+  const coverBw = cover;
 
-  const { width: screenWidth } = useWindowDimensions();
-  const COVER_HEIGHT = 440;
-
-  console.log('cover', cover);
+  console.log('cover pic in DUMP detail?', cover)
 
   if (loadingDetail && !current) {
     return (
@@ -83,15 +82,10 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Cover — always B&W */}
-        <View style={styles.cover}>
-          {!!cover && (
-            <SkiaBwImage
-              uri={cover}
-              bw
-              style={{ width: screenWidth, height: COVER_HEIGHT }}
-            />
-          )}
+        <ImageBackground
+          source={coverBw ? { uri: coverBw } : undefined}
+          style={styles.cover}
+        >
           <View style={styles.coverOverlay} />
 
           {current.live && (
@@ -109,7 +103,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
             <Text style={styles.title}>{current.title}</Text>
             <Text style={styles.stats}>{current.photos}</Text>
           </View>
-        </View>
+        </ImageBackground>
 
         <View style={styles.gridHeader}>
           <Text style={styles.gridLabel}>EVERYONE’S POV</Text>
@@ -129,6 +123,9 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         <View style={styles.grid}>
           {photos.map((uri, index) => {
             const isColor = longPressedIndex === index;
+            const canBw = uri.includes('unsplash.com');
+            const imageUri =
+              !isColor && canBw ? `${uri}&sat=-100` : uri;
 
             return (
               <Pressable
@@ -139,11 +136,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
                 onPressOut={() => setLongPressedIndex(null)}
                 onPress={() => setViewerIndex(index)}
               >
-                <SkiaBwImage
-                  uri={uri}
-                  bw={!isColor}
-                  style={styles.photoImage}
-                />
+                <Image source={{ uri: imageUri }} style={styles.photoImage} />
               </Pressable>
             );
           })}
@@ -188,11 +181,10 @@ const styles = StyleSheet.create({
     height: 440,
     justifyContent: 'flex-end',
     backgroundColor: '#111',
-    overflow: 'hidden',
   },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   textBackground: {
     position: 'absolute',
@@ -272,7 +264,6 @@ const styles = StyleSheet.create({
     width: '50%',
     height: 210,
     backgroundColor: '#111',
-    overflow: 'hidden',
   },
   photoImage: {
     width: '100%',

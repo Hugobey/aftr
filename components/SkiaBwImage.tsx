@@ -12,8 +12,11 @@ import {
   ColorMatrix,
   FilterMode,
   Image as SkiaImage,
+  LinearGradient,
   MipmapMode,
+  Rect,
   useImage,
+  vec,
 } from '@shopify/react-native-skia';
 
 const GRAYSCALE = [
@@ -26,6 +29,8 @@ const GRAYSCALE = [
 type Props = {
   uri: string;
   bw?: boolean;
+  /** smooth black fade at the bottom (for cards / covers) */
+  bottomFade?: boolean;
   style?: StyleProp<ViewStyle>;
   fit?: 'cover' | 'contain';
 };
@@ -33,6 +38,7 @@ type Props = {
 export default function SkiaBwImage({
   uri,
   bw = true,
+  bottomFade = false,
   style,
   fit = 'cover',
 }: Props) {
@@ -44,7 +50,7 @@ export default function SkiaBwImage({
     if (width > 0 && height > 0) setSize({ width, height });
   };
 
-  // Fallback while Skia loads / if it fails
+  // Fallback while Skia loads
   if (!image || size.width === 0) {
     return (
       <View style={[styles.fill, style]} onLayout={onLayout}>
@@ -56,6 +62,9 @@ export default function SkiaBwImage({
       </View>
     );
   }
+
+  const fadeTop = size.height * 0.4;
+  const fadeHeight = size.height * 0.6;
 
   return (
     <View style={[styles.fill, style]} onLayout={onLayout}>
@@ -71,6 +80,21 @@ export default function SkiaBwImage({
         >
           {bw ? <ColorMatrix matrix={GRAYSCALE} /> : null}
         </SkiaImage>
+
+        {bottomFade && (
+          <Rect x={0} y={fadeTop} width={size.width} height={fadeHeight}>
+            <LinearGradient
+              start={vec(0, 0)}
+              end={vec(0, fadeHeight)}
+              colors={[
+                'transparent',
+                'rgba(0,0,0,0.35)',
+                'rgba(0,0,0,0.8)',
+                'rgba(0,0,0,1)',
+              ]}
+            />
+          </Rect>
+        )}
       </Canvas>
     </View>
   );
