@@ -11,12 +11,15 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
+import { parseJoinCode } from '../utils/parseJoinCode';
+import { getDumpByInviteCode } from '../lib/dump';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinDump'>;
 
 export default function JoinDumpScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!permission) {
@@ -24,11 +27,26 @@ export default function JoinDumpScreen({ navigation }: Props) {
     }
   }, [permission, requestPermission]);
 
-  const handleBarcodeScanned = () => {
+  const handleBarcodeScanned = async ({ data }: { data: string }) => {
     if (scanned) return;
 
+    const code = parseJoinCode (data);
+    if (!code) {
+      setError('Invalid QR');
+      return;
+    }
+
     setScanned(true);
-    navigation.replace('DumpDetail', { dumpId: 'no-sleep' });
+    setError(null);
+
+    try {
+      const dump = await getDumpByInviteCode(code);
+      // optional: save joined id in device store for Home
+      navigation.replace('DumpDetail', { dumpId: dump.id });
+    } catch {
+      setError('Dump not found');
+      setScanned(false); // allow retry
+    }
   };
 
   return (
