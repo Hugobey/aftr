@@ -2,29 +2,24 @@
   "expo": {
     "name": "Aftr",
     "slug": "aftr",
+    "scheme": "aftr",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/aftr-icon.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.squadflix.aftr"
+      "bundleIdentifier": "com.hugoblanchart.aftr"
     },
     "android": {
+      "package": "com.hugoblanchart.aftr",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/aftr-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#000000"
-      },
-      "package": "com.squadflix.aftr",
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ]
-    },
-    "web": {
-      "favicon": "./assets/aftr-icon.png"
+      }
     },
     "plugins": [
+      "expo-dev-client",
       "expo-sharing",
       "expo-status-bar",
       [

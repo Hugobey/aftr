@@ -30,10 +30,13 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
 
   const {
+    dumpId, 
     maxPhotos = 10,
     title = 'SELECTED PHOTOS',
     confirmLabel = 'CONFIRM',
   } = route.params ?? {};
+
+  const isEditing = !!dumpId;
 
   const [loading, setLoading] = useState(false);
 
@@ -69,16 +72,27 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
   const handleConfirm = async () => {
     if (loading) return;
+    if (photoUris.length === 0 && isEditing) {
+      Alert.alert('No photos', 'Add at least one photo.');
+      return;
+    };
 
     try {
       setLoading(true);
 
-      console.log('=== CREATE DUMP DEBUG ===', {
-        name,
-        coverUri,
-        isOpen,
-        photoUris,
-      });
+      if (isEditing) {
+        // Existing dump → only append photos
+        await addPhotosToDump(dumpId, photoUris);
+        reset(); // clears local picker state only
+        navigation.replace('DumpDetail', { dumpId });
+        return;
+      }
+
+      // New dump
+      if (!name.trim()) {
+        Alert.alert('Error', 'Dump name is missing.');
+        return;
+      }
 
       const dump = await createDump({
         name,
@@ -89,16 +103,21 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
-      };
+      }
 
       reset();
       navigation.replace('DumpDetail', { dumpId: dump.id });
     } catch (error) {
       console.error(error);
-      Alert.alert('Error', 'Could not create the dump. Please try again.');
+      Alert.alert(
+        'Error',
+        isEditing
+          ? 'Could not add photos. Please try again.'
+          : 'Could not create the dump. Please try again.'
+      );
     } finally {
       setLoading(false);
-    }
+    };
   };
 
   return (
@@ -148,7 +167,12 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
           onPress={handleConfirm}
         >
           <Text style={styles.confirmText}>
-            {loading ? 'CREATING...' : `${confirmLabel}  ↗`}
+           {loading
+            ? isEditing
+              ? 'ADDING...'
+              : 'CREATING...'
+            : `${confirmLabel}  ↗`
+          }
           </Text>
         </Pressable>
       </View>

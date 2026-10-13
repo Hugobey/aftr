@@ -22,10 +22,11 @@ export type RootStackParamList = {
   DumpDetail: { dumpId: string };
   Invite: { dumpId: string };
   SelectedPhotos: {
-    initialUris: string[];
+    dumpId?: string;
     maxPhotos?: number;
     title?: string;
     confirmLabel?: string;
+    initialUris?: string[];
   };
 };
 

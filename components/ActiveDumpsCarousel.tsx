@@ -22,8 +22,6 @@ export default function ActiveDumpsCarousel({ dumps, navigation }: Props) {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  console.log('Dumps in carousel', dumps)
-
   if (!dumps?.length) return null;
 
   const cardWidth = width - 40;

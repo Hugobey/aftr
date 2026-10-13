@@ -41,8 +41,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const cover = current?.image ?? photos[0] ?? null;
   const coverBw = cover;
 
-  console.log('cover pic in DUMP detail?', cover)
-
   if (loadingDetail && !current) {
     return (
       <View style={[styles.container, styles.loader, { paddingTop: insets.top }]}>
@@ -110,6 +108,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           <Pressable
             onPress={() =>
               navigation.navigate('SelectedPhotos', {
+                dumpId: current.id,
                 maxPhotos: 10,
                 title: 'PHOTOS',
                 confirmLabel: 'ADD PHOTOS',
