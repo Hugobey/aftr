@@ -17,6 +17,7 @@ import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
 import { useCreateDumpStore } from '../store/createDumpStore';
 import { createDump, addPhotosToDump } from '../lib/dump';
+import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
 
@@ -50,6 +51,8 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
     reset,
   } = useCreateDumpStore();
 
+  const addCreatedId = useDeviceStore((s) => s.addCreatedId);
+
   const canAddMore = photoUris.length < maxPhotos;
 
   const handleAddMore = async () => {
@@ -76,10 +79,11 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
       Alert.alert('No photos', 'Add at least one photo.');
       return;
     };
-
+    
+    
     try {
       setLoading(true);
-
+      
       if (isEditing) {
         // Existing dump → only append photos
         await addPhotosToDump(dumpId, photoUris);
@@ -87,23 +91,24 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
         navigation.replace('DumpDetail', { dumpId });
         return;
       }
-
+      
       // New dump
       if (!name.trim()) {
         Alert.alert('Error', 'Dump name is missing.');
         return;
       }
-
+      
       const dump = await createDump({
         name,
         coverUri,
         isOpen,
         date: new Date().toISOString().split('T')[0],
       });
-
+      addCreatedId(dump);
+      
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
-      }
+      };
 
       reset();
       navigation.replace('DumpDetail', { dumpId: dump.id });

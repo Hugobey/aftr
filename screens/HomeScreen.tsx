@@ -17,8 +17,8 @@ import EmptyState from '../components/EmptyState';
 import ActiveDumpsCarousel from '../components/ActiveDumpsCarousel';
 import ArchiveGrid from '../components/ArchiveGrid';
 import JoinDumpButton from '../components/JoinDumpButton';
-import { useDumpsStore } from '../store/dumpStore'
-import { ACTIVE_DUMPS, ARCHIVED_DUMPS } from '../data/dumps';
+import { useDumpsStore } from '../store/dumpStore';
+import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -29,24 +29,30 @@ export default function HomeScreen({ navigation }: Props) {
   const loadingList = useDumpsStore((s) => s.loadingList);
   const fetchDumps = useDumpsStore((s) => s.fetchDumps);
 
-  // Refresh every time Home is focused (e.g. after create)
+  const createdIds = useDeviceStore((s) => s.createdIds);
+  const joinedIds = useDeviceStore((s) => s.joinedIds);
+
   useFocusEffect(
     useCallback(() => {
       fetchDumps();
     }, [fetchDumps])
   );
 
-  const activeDumps = dumps.filter((d) => d.live);
-  const archivedDumps = dumps.filter((d) => !d.live);
+  // Only dumps this device created or joined
+  const mine = new Set([...createdIds, ...joinedIds]);
+  const visibleDumps = dumps.filter((d) => mine.has(d.id));
 
-  // If nothing is live, treat newest as active
-  const active = activeDumps.length > 0 ? activeDumps : dumps.slice(0, 1);
+  const activeDumps = visibleDumps.filter((d) => d.live);
+  const archivedDumps = visibleDumps.filter((d) => !d.live);
+
+  const active =
+    activeDumps.length > 0 ? activeDumps : visibleDumps.slice(0, 1);
   const archived =
-    activeDumps.length > 0 ? archivedDumps : dumps.slice(1);
+    activeDumps.length > 0 ? archivedDumps : visibleDumps.slice(1);
 
-  const totalCount = dumps.length;
+  const totalCount = visibleDumps.length;
   const hasDumps = totalCount > 0;
-  
+
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top }}>
@@ -78,16 +84,10 @@ export default function HomeScreen({ navigation }: Props) {
             </Text>
           </View>
 
-          <ActiveDumpsCarousel
-            dumps={active}
-            navigation={navigation}
-          />
+          <ActiveDumpsCarousel dumps={active} navigation={navigation} />
 
           {archived.length > 0 && (
-            <ArchiveGrid
-              dumps={archived}
-              navigation={navigation}
-            />
+            <ArchiveGrid dumps={archived} navigation={navigation} />
           )}
         </ScrollView>
       ) : (
@@ -97,10 +97,7 @@ export default function HomeScreen({ navigation }: Props) {
       )}
 
       <View
-        style={[
-          styles.bottomBar,
-          { paddingBottom: insets.bottom + 16 },
-        ]}
+        style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}
       >
         <JoinDumpButton navigation={navigation} />
       </View>

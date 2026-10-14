@@ -7,12 +7,18 @@ type DeviceState = {
   deviceId: string | null;
   hydrated: boolean;
   joinedIds: string[];
+  createdIds: string[];
 
   ensureDeviceId: () => string;
   setHydrated: (value: boolean) => void;
+
   addJoinedId: (id: string) => void;
   removeJoinedId: (id: string) => void;
   hasJoined: (id: string) => boolean;
+
+  addCreatedId: (id: string) => void;
+  removeCreatedId: (id: string) => void;
+  hasCreated: (id: string) => boolean;
 };
 
 function createId() {
@@ -25,6 +31,7 @@ export const useDeviceStore = create<DeviceState>()(
       deviceId: null,
       hydrated: false,
       joinedIds: [],
+      createdIds: [],
 
       ensureDeviceId: () => {
         const existing = get().deviceId;
@@ -49,6 +56,20 @@ export const useDeviceStore = create<DeviceState>()(
       },
 
       hasJoined: (id: string) => get().joinedIds.includes(id),
+
+      addCreatedId: (id: string) => {
+        const { createdIds } = get();
+        if (createdIds.includes(id)) return;
+        set({ createdIds: [...createdIds, id] });
+      },
+
+      removeCreatedId: (id: string) => {
+        set({
+          createdIds: get().createdIds.filter((x) => x !== id),
+        });
+      },
+
+      hasCreated: (id: string) => get().createdIds.includes(id),
     }),
     {
       name: 'aftr-device',

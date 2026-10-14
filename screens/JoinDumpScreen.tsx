@@ -32,9 +32,7 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
     if (scanned) return;
-    console.log('QR raw:', data);
     const code = parseJoinCode (data);
-    console.log('parsed code:', code);
     if (!code) {
       setError('Invalid QR');
       return;
@@ -44,7 +42,6 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
     try {
       const dump = await getDumpByInviteCode(code);
-      console.log('loaded dump:', dump.id, dump.name, dump.invite_code);
       addJoinedId(dump.id);
       navigation.replace('DumpDetail', { dumpId: dump.id });
     } catch {
