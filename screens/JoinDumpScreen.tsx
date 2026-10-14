@@ -13,6 +13,7 @@ import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { parseJoinCode } from '../utils/parseJoinCode';
 import { getDumpByInviteCode } from '../lib/dump';
+import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinDump'>;
 
@@ -20,6 +21,8 @@ export default function JoinDumpScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const addJoinedId = useDeviceStore((s) => s.addJoinedId);
 
   useEffect(() => {
     if (!permission) {
@@ -29,24 +32,25 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
   const handleBarcodeScanned = async ({ data }: { data: string }) => {
     if (scanned) return;
-
+    console.log('QR raw:', data);
     const code = parseJoinCode (data);
+    console.log('parsed code:', code);
     if (!code) {
       setError('Invalid QR');
       return;
     }
-
     setScanned(true);
     setError(null);
 
     try {
       const dump = await getDumpByInviteCode(code);
-      // optional: save joined id in device store for Home
+      console.log('loaded dump:', dump.id, dump.name, dump.invite_code);
+      addJoinedId(dump.id);
       navigation.replace('DumpDetail', { dumpId: dump.id });
     } catch {
       setError('Dump not found');
       setScanned(false); // allow retry
-    }
+    };
   };
 
   return (

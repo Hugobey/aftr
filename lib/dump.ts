@@ -112,7 +112,7 @@ export async function getDumpByInviteCode(code: string) {
   const { data, error } = await supabase
     .from('dumps')
     .select('*, photos(*)')
-    .eq('invite_code', code)
+    .eq('invite_code', code.toUpperCase())    
     .single();
 
   if (error) throw error;
