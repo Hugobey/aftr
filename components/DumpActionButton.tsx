@@ -6,58 +6,54 @@ import type { RootStackParamList } from '../App';
 import { Colors } from '../constants/Colors';
 
 type Variant = 'join' | 'create';
+type Appearance = 'primary' | 'secondary';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList>;
   variant?: Variant;
+  appearance?: Appearance;
   onPress?: () => void;
 };
 
 const CONFIG: Record<
   Variant,
-  {
-    label: string;
-    icon: 'scan' | 'plus';
-    route: keyof RootStackParamList;
-  }
+  { label: string; icon: 'scan' | 'plus'; route: keyof RootStackParamList }
 > = {
-  join: {
-    label: 'JOIN A DUMP',
-    icon: 'scan',
-    route: 'JoinDump',
-  },
-  create: {
-    label: 'CREATE A DUMP',
-    icon: 'plus',
-    route: 'CreateDump',
-  },
+  join: { label: 'JOIN A DUMP', icon: 'scan', route: 'JoinDump' },
+  create: { label: 'CREATE A DUMP', icon: 'plus', route: 'CreateDump' },
 };
 
 export default function DumpActionButton({
   navigation,
   variant = 'join',
+  appearance = 'primary',
   onPress,
 }: Props) {
   const config = CONFIG[variant];
-
-  const handlePress = () => {
-    if (onPress) {
-      onPress();
-      return;
-    }
-    navigation.navigate(config.route as any);
-  };
+  const isSecondary = appearance === 'secondary';
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.button,
+        isSecondary ? styles.buttonSecondary : styles.buttonPrimary,
         pressed && styles.buttonPressed,
       ]}
-      onPress={handlePress}
+      onPress={() => {
+        if (onPress) return onPress();
+        navigation.navigate(config.route as any);
+      }}
     >
-      <Icon name={config.icon} size={22} color="#000" />
-      <Text style={styles.text}>{config.label}</Text>
+      <Icon
+        name={config.icon}
+        size={22}
+        color={isSecondary ? '#fff' : '#000'}
+      />
+      <Text
+        style={[styles.text, isSecondary && styles.textSecondary]}
+      >
+        {config.label}
+      </Text>
     </Pressable>
   );
 }
@@ -65,12 +61,18 @@ export default function DumpActionButton({
 const styles = StyleSheet.create({
   button: {
     height: 64,
-    backgroundColor: Colors.accent,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    borderRadius: 0,
+  },
+  buttonPrimary: {
+    backgroundColor: Colors.accent,
+  },
+  buttonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   buttonPressed: {
     opacity: 0.8,
@@ -80,5 +82,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 16,
     letterSpacing: 1.2,
+  },
+  textSecondary: {
+    color: '#fff',
   },
 });

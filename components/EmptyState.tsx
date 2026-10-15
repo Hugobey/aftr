@@ -26,7 +26,7 @@ export default function EmptyState({ navigation }: Props) {
         </Text>
       </View>
 
-      <View style={styles.actions}>
+      {/* <View style={styles.actions}>
         <Pressable
           style={styles.primaryButton}
           onPress={() => navigation.navigate('CreateDump')}
@@ -40,7 +40,7 @@ export default function EmptyState({ navigation }: Props) {
         >
           <Text style={styles.secondaryText}>JOIN A DUMP</Text>
         </Pressable>
-      </View>
+      </View> */}
     </View>
   );
 }
@@ -51,7 +51,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 0,
     paddingBottom: 28,
-    justifyContent: 'space-between',
+    // justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row'
   },
 
   eyebrow: {
@@ -64,7 +66,7 @@ const styles = StyleSheet.create({
   hero: {
     color: Colors.text,
     fontSize: 67,
-    lineHeight: 58,
+    lineHeight: 66,
     letterSpacing: -3.4,
     fontWeight: '900',
     marginTop: 32,
