@@ -48,7 +48,7 @@ export default function EmptyState({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 42,
+    paddingHorizontal: 20,
     paddingTop: 0,
     paddingBottom: 28,
     justifyContent: 'space-between',

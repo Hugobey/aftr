@@ -17,7 +17,9 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
+import ConfirmSheet from '../components/ConfirmSheet';
 import { useDumpsStore } from '../store/dumpStore';
+import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -28,10 +30,14 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const current = useDumpsStore((s) => s.current);
   const loadingDetail = useDumpsStore((s) => s.loadingDetail);
   const fetchDump = useDumpsStore((s) => s.fetchDump);
-  const clearCurrent = useDumpsStore((s) => s.clearCurrent);
+
+  const removeJoinedId = useDeviceStore((s) => s.removeJoinedId);
+  const hasCreated = useDeviceStore((s) => s.hasCreated);
+  const isHost = hasCreated(dumpId);
 
   const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   useEffect(() => {
     fetchDump(dumpId);
@@ -39,7 +45,19 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   const photos = current?.photoUrls ?? [];
   const cover = current?.image ?? photos[0] ?? null;
-  const coverBw = cover;
+  // MVP: no real members table yet
+  const memberCount = 1;
+
+  const handleLeave = () => {
+    removeJoinedId(dumpId);
+    setLeaveOpen(false);
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      })
+    );
+  };
 
   if (loadingDetail && !current) {
     return (
@@ -81,7 +99,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <ImageBackground
-          source={coverBw ? { uri: coverBw } : undefined}
+          source={cover ? { uri: cover } : undefined}
           style={styles.cover}
         >
           <View style={styles.coverOverlay} />
@@ -99,12 +117,18 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
               <Text style={styles.date}>{current.date}</Text>
             )}
             <Text style={styles.title}>{current.title}</Text>
-            <Text style={styles.stats}>{current.photos}</Text>
+            <View style={styles.statsRow}>
+              <Text style={styles.stats}>{current.photos}</Text>
+              <Text style={styles.stats}>
+                {memberCount} {memberCount === 1 ? 'PERSON' : 'PEOPLE'}
+              </Text>
+            </View>
           </View>
         </ImageBackground>
 
-        <View style={styles.gridHeader}>
-          <Text style={styles.gridLabel}>EVERYONE’S POV</Text>
+        {/* EVERYONE'S POV */}
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>EVERYONE’S POV</Text>
           <Pressable
             onPress={() =>
               navigation.navigate('SelectedPhotos', {
@@ -115,30 +139,46 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
               })
             }
           >
-            <Text style={styles.addYours}>＋  ADD YOURS</Text>
+            <Text style={styles.rowActionAccent}>＋  ADD YOURS</Text>
           </Pressable>
         </View>
 
-        <View style={styles.grid}>
-          {photos.map((uri, index) => {
-            const isColor = longPressedIndex === index;
-            const canBw = uri.includes('unsplash.com');
-            const imageUri =
-              !isColor && canBw ? `${uri}&sat=-100` : uri;
+        {/* HOST CONTROLS / membership */}
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>
+            {isHost ? 'HOST CONTROLS' : 'DUMP'}
+          </Text>
+          <View style={styles.rowRight}>
+            <Pressable
+              onPress={() => {
+                // later: navigation.navigate('Members', { dumpId: current.id })
+              }}
+              hitSlop={8}
+            >
+              <Text style={styles.membersLink}>
+                {memberCount} MEMBERS →
+              </Text>
+            </Pressable>
+            <Pressable onPress={() => setLeaveOpen(true)} hitSlop={8}>
+              <Text style={styles.leaveLink}>LEAVE DUMP</Text>
+            </Pressable>
+          </View>
+        </View>
 
-            return (
-              <Pressable
-                key={uri + index}
-                style={styles.photo}
-                delayLongPress={120}
-                onLongPress={() => setLongPressedIndex(index)}
-                onPressOut={() => setLongPressedIndex(null)}
-                onPress={() => setViewerIndex(index)}
-              >
-                <Image source={{ uri: imageUri }} style={styles.photoImage} />
-              </Pressable>
-            );
-          })}
+        {/* Photo grid */}
+        <View style={styles.grid}>
+          {photos.map((uri, index) => (
+            <Pressable
+              key={uri + index}
+              style={styles.photo}
+              delayLongPress={120}
+              onLongPress={() => setLongPressedIndex(index)}
+              onPressOut={() => setLongPressedIndex(null)}
+              onPress={() => setViewerIndex(index)}
+            >
+              <Image source={{ uri }} style={styles.photoImage} />
+            </Pressable>
+          ))}
         </View>
 
         {photos.length === 0 && (
@@ -151,6 +191,17 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         initialIndex={viewerIndex ?? 0}
         photos={photos}
         onClose={() => setViewerIndex(null)}
+      />
+
+      <ConfirmSheet
+        visible={leaveOpen}
+        title={`Leave ${current.title}?`}
+        message="You'll no longer see or contribute to this Dump."
+        cancelLabel="CANCEL"
+        confirmLabel="LEAVE"
+        tone="danger"
+        onCancel={() => setLeaveOpen(false)}
+        onConfirm={handleLeave}
       />
     </View>
   );
@@ -174,7 +225,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 0,
+    paddingBottom: 40,
   },
   cover: {
     height: 440,
@@ -183,7 +234,7 @@ const styles = StyleSheet.create({
   },
   coverOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   textBackground: {
     position: 'absolute',
@@ -191,7 +242,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 220,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   coverContent: {
     paddingHorizontal: 24,
@@ -222,38 +273,60 @@ const styles = StyleSheet.create({
   },
   title: {
     color: Colors.text,
-    fontSize: 52,
-    lineHeight: 48,
-    letterSpacing: -2.2,
+    fontSize: 48,
+    lineHeight: 46,
+    letterSpacing: -2,
     fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 20,
+    marginTop: 18,
   },
   stats: {
     color: '#aaa',
     fontSize: 13,
     letterSpacing: 1.3,
     fontWeight: '900',
-    marginTop: 20,
   },
-  gridHeader: {
-    height: 72,
+  row: {
+    minHeight: 64,
     paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#333',
+    borderBottomColor: '#292929',
   },
-  gridLabel: {
-    color: '#999',
+  rowLabel: {
+    color: '#777',
     fontWeight: '900',
-    fontSize: 13,
-    letterSpacing: 1.6,
+    fontSize: 12,
+    letterSpacing: 1.5,
   },
-  addYours: {
+  rowActionAccent: {
     color: Colors.accent,
     fontWeight: '900',
-    fontSize: 14,
+    fontSize: 13,
     letterSpacing: 1.1,
+  },
+  rowRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 18,
+  },
+  membersLink: {
+    color: '#ccc',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1.2,
+  },
+  leaveLink: {
+    color: '#E85A5A',
+    fontWeight: '900',
+    fontSize: 12,
+    letterSpacing: 1.2,
   },
   grid: {
     flexDirection: 'row',
