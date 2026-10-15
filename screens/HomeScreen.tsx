@@ -16,9 +16,10 @@ import Header from '../components/Header';
 import EmptyState from '../components/EmptyState';
 import ActiveDumpsCarousel from '../components/ActiveDumpsCarousel';
 import ArchiveGrid from '../components/ArchiveGrid';
-import JoinDumpButton from '../components/JoinDumpButton';
+import JoinDumpButton from '../components/DumpActionButton';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
+import DumpActionButton from '../components/DumpActionButton';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -99,7 +100,7 @@ export default function HomeScreen({ navigation }: Props) {
       <View
         style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}
       >
-        <JoinDumpButton navigation={navigation} />
+        <DumpActionButton navigation={navigation} />
       </View>
     </View>
   );
