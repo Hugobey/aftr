@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.3,
   },
   bottomBar: {
-    paddingHorizontal: 38,
+    paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 24,
     borderTopWidth: StyleSheet.hairlineWidth,

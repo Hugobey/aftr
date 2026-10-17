@@ -18,6 +18,7 @@ import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
 import ConfirmSheet from '../components/ConfirmSheet';
+import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
 
@@ -44,6 +45,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   }, [dumpId]);
 
   const photos = current?.photoUrls ?? [];
+  const photoItems = current?.photoItems ?? [];
   const cover = current?.image ?? photos[0] ?? null;
   // MVP: no real members table yet
   const memberCount = 1;
@@ -167,16 +169,16 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
         {/* Photo grid */}
         <View style={styles.grid}>
-          {photos.map((uri, index) => (
+          {photoItems.map((photo, index) => (
             <Pressable
-              key={uri + index}
+              key={photo.id ?? photo.url + index}
               style={styles.photo}
               delayLongPress={120}
               onLongPress={() => setLongPressedIndex(index)}
               onPressOut={() => setLongPressedIndex(null)}
               onPress={() => setViewerIndex(index)}
             >
-              <Image source={{ uri }} style={styles.photoImage} />
+              <Image source={{ uri: photo.url }} style={styles.photoImage} />
             </Pressable>
           ))}
         </View>
@@ -189,8 +191,13 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
       <PhotoViewer
         visible={viewerIndex !== null}
         initialIndex={viewerIndex ?? 0}
-        photos={photos}
+        photos={photoItems}
         onClose={() => setViewerIndex(null)}
+        onDelete={async (photo) => {
+          if (!photo.id) return;
+          await deletePhoto({ dumpId: current.id, photoId: photo.id });
+          await fetchDump(current.id);
+        }}
       />
 
       <ConfirmSheet

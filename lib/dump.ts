@@ -78,6 +78,80 @@ export async function addPhotosToDump(dumpId: string, uris: string[]) {
   return data;
 }
 
+type DeletePhotoInput = {
+  dumpId: string;
+  photoId?: string | null;
+  url?: string | null;
+};
+
+function getStoragePathFromPublicUrl(url: string) : string | null {
+  try {
+    const { pathname } = new URL(url);
+    const marker = '/storage/v1/object/public/dump-photos/';
+    const pathIndex = pathname.indexOf(marker);
+
+    return pathIndex === -1
+      ? null
+      : decodeURIComponent(pathname.slice(pathIndex + marker.length));
+  } catch {
+    return null;
+  }
+}
+
+/** Deletes a photo row and makes a best-effort cleanup of its storage object. */
+export async function deletePhoto({ dumpId, photoId, url }: DeletePhotoInput) {
+  if (!dumpId) {
+    throw new Error('dumpId is required to delete a photo.');
+  };
+  if (!photoId && !url) {
+    throw new Error('A photo id or URL is required to delete a photo.');
+  };
+
+  // Prefer id when present
+  let query = supabase
+    .from('photos')
+    .delete()
+    .eq('dump_id', dumpId);
+
+  if (photoId) {
+    query = query.eq('id', photoId);
+  } else {
+    query = query.eq('url', url!);
+  };
+
+  const { data, error } = await query.select('id, url').maybeSingle();
+
+  if (error) {
+    // 42501 = permission denied (RLS / GRANT)
+    if ((error as any).code === '42501') {
+      throw new Error(
+        'Photo not found or you do not have permission to delete it.'
+      );
+    }
+    throw new Error(`Could not delete photo: ${error.message}`);
+  };
+
+  if (!data) {
+    throw new Error(
+      'Photo not found or you do not have permission to delete it.'
+    );
+  };
+
+  const storagePath = getStoragePathFromPublicUrl(data.url);
+  if (storagePath) {
+    const { error: storageError } = await supabase.storage
+      .from('dump-photos')
+      .remove([storagePath]);
+
+    if (storageError) {
+      console.warn(
+        `Photo row deleted, storage cleanup failed: ${storageError.message}`
+      );
+    };
+  };
+  return data;
+};
+
 export async function getDumps() {
   const { data, error } = await supabase
     .from('dumps')

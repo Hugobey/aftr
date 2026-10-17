@@ -9,8 +9,14 @@ export type DumpUI = {
   date: string;
   photos: string;
   photoUrls: string[];
+  photoItems: DumpPhoto[];
   live: boolean;
   inviteCode?: string;
+};
+
+export type DumpPhoto = {
+  id: string | null;
+  url: string;
 };
 
 type DumpsState = {
@@ -26,9 +32,13 @@ type DumpsState = {
 
 function mapDump(row: any): DumpUI {
   const list = Array.isArray(row.photos) ? row.photos : [];
-  const photoUrls = list
-    .map((p: any) => p.url)
-    .filter(Boolean);
+  const photoItems: DumpPhoto[] = list
+    .filter((photo: any) => photo?.url)
+    .map((photo: any): DumpPhoto => ({
+      id: typeof photo.id === 'string' ? photo.id : null,
+      url: photo.url,
+    }));
+  const photoUrls = photoItems.map((photo) => photo.url);
 
   const cover =
     row.cover_url ||
@@ -40,6 +50,10 @@ function mapDump(row: any): DumpUI {
     cover && !photoUrls.includes(cover)
       ? [cover, ...photoUrls]
       : photoUrls;
+  const orderedPhotoItems =
+    cover && !photoUrls.includes(cover)
+      ? [{ id: null, url: cover }, ...photoItems]
+      : photoItems;
 
   return {
     id: row.id,
@@ -56,6 +70,7 @@ function mapDump(row: any): DumpUI {
       : '',
     photos: `${orderedUrls.length} PHOTOS`,
     photoUrls: orderedUrls,
+    photoItems: orderedPhotoItems,
     live: !!row.is_open,
     inviteCode: row.invite_code,
   };
