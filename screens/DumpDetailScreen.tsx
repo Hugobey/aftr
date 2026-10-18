@@ -61,6 +61,34 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
     );
   };
 
+  const handleDeletePhoto = async (photo: {
+      id: string | null;
+      url: string;
+    }) => {
+    if (!photo.id || !current?.id) {
+      throw new Error('Photo not found.');
+    };
+    const id = current.id;
+
+    // Wait for Supabase only
+    await deletePhoto({
+      dumpId: id,
+      photoId: photo.id,
+      url: photo.url,
+    });
+
+    // close modal first so you’re not on a deleted index
+    setViewerIndex(null);
+
+    // Let React commit the unmount before touching dump state
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+    // then refresh detail (current stays visible if Fix 1 is applied)
+    await fetchDump(current.id);
+  };
+
   if (loadingDetail && !current) {
     return (
       <View style={[styles.container, styles.loader, { paddingTop: insets.top }]}>
@@ -188,17 +216,15 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         )}
       </ScrollView>
 
-      <PhotoViewer
-        visible={viewerIndex !== null}
-        initialIndex={viewerIndex ?? 0}
-        photos={photoItems}
-        onClose={() => setViewerIndex(null)}
-        onDelete={async (photo) => {
-          if (!photo.id) return;
-          await deletePhoto({ dumpId: current.id, photoId: photo.id });
-          await fetchDump(current.id);
-        }}
-      />
+      {viewerIndex !== null && (
+        <PhotoViewer
+          visible
+          initialIndex={viewerIndex}
+          photos={photoItems}
+          onClose={() => setViewerIndex(null)}
+          onDelete={handleDeletePhoto}
+        />
+      )}  
 
       <ConfirmSheet
         visible={leaveOpen}

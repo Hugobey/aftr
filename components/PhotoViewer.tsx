@@ -64,31 +64,22 @@ export default function PhotoViewer({
   const activePhoto = displayPhotos[activeIndex];
 
   const handleDelete = async () => {
-    if (!activePhoto?.id) return;
-
+    console.log('trigger DELETE')
+    if (!activePhoto) return;
     setDeleting(true);
     setDeleteError(null);
     try {
       await onDelete(activePhoto);
+      console.log('delete ok, calling onClose');
       setDeleteOpen(false);
-
-      const remainingPhotos = displayPhotos.filter((photo) => photo.id !== activePhoto.id);
-      setDisplayPhotos(remainingPhotos);
-
-      if (remainingPhotos.length === 0) {
-        onClose();
-      } else {
-        const nextIndex = Math.min(activeIndex, remainingPhotos.length - 1);
-        setActiveIndex(nextIndex);
-        requestAnimationFrame(() => {
-          listRef.current?.scrollToIndex({ index: nextIndex, animated: false });
-        });
-      }
+      // onClose(); // always return to DumpDetail
     } catch (error) {
-      setDeleteError(error instanceof Error ? error.message : 'Could not delete photo.');
+      setDeleteError(
+        error instanceof Error ? error.message : 'Could not delete photo.'
+      );
     } finally {
       setDeleting(false);
-    }
+    };
   };
 
   return (

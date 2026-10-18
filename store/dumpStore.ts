@@ -101,23 +101,18 @@ export const useDumpsStore = create<DumpsState>((set, get) => ({
   },
 
   fetchDump: async (id: string) => {
-    const cached = get().dumps.find((d) => d.id === id);
-
-    if (cached) {
-      set({ current: cached, loadingDetail: false, error: null });
-    } else {
-      set({ loadingDetail: true, error: null });
-    }
-
+    const keep = get().current?.id === id ? get().current : null;
+    set({
+      loadingDetail: !keep,
+      error: null,
+      // do NOT set current: null here
+    });
     try {
       const row = await getDump(id);
       set({ current: mapDump(row), loadingDetail: false });
     } catch (e: any) {
-      set({
-        error: e.message ?? 'Failed to load dump',
-        loadingDetail: false,
-      });
-    }
+      set({ error: e.message, loadingDetail: false });
+    };
   },
 
   clearCurrent: () => set({ current: null }),
