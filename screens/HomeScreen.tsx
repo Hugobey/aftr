@@ -53,6 +53,10 @@ export default function HomeScreen({ navigation }: Props) {
   const totalCount = visibleDumps.length;
   const hasDumps = totalCount > 0;
 
+  console.log('device membership', { createdIds, joinedIds });
+  console.log('store dumps', dumps.map((d) => d.id));
+  console.log('visible', visibleDumps.map((d) => d.id));
+
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top }}>

@@ -91,8 +91,10 @@ export const useDumpsStore = create<DumpsState>((set, get) => ({
 
     try {
       const rows = await getDumps();
+      console.log('getDumps count', rows?.length, rows?.map((r: any) => r.id));
       set({ dumps: rows.map(mapDump), loadingList: false });
     } catch (e: any) {
+      console.log('fetchDumps error', e);
       set({
         error: e.message ?? 'Failed to load dumps',
         loadingList: false,

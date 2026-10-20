@@ -19,6 +19,7 @@ type DeviceState = {
   addCreatedId: (id: string) => void;
   removeCreatedId: (id: string) => void;
   hasCreated: (id: string) => boolean;
+  normalizeCreatedIds: () => void;
 };
 
 function createId() {
@@ -58,9 +59,20 @@ export const useDeviceStore = create<DeviceState>()(
       hasJoined: (id: string) => get().joinedIds.includes(id),
 
       addCreatedId: (id: string) => {
+        const normalized =
+          typeof id === 'string' ? id : (id as any)?.id;
+        if (!normalized) return;
         const { createdIds } = get();
-        if (createdIds.includes(id)) return;
-        set({ createdIds: [...createdIds, id] });
+        if (createdIds.includes(normalized)) return;
+        set({ createdIds: [...createdIds, normalized] });
+      },
+
+      normalizeCreatedIds: () => {
+        const raw = get().createdIds as unknown[];
+        const ids = raw
+          .map((x) => (typeof x === 'string' ? x : (x as any)?.id))
+          .filter((x): x is string => typeof x === 'string');
+        set({ createdIds: [...new Set(ids)] });
       },
 
       removeCreatedId: (id: string) => {

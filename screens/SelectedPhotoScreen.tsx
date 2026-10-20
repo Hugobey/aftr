@@ -104,8 +104,8 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
         isOpen,
         date: new Date().toISOString().split('T')[0],
       });
-      addCreatedId(dump);
-      
+      addCreatedId(dump.id); // string only  
+          
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
       };

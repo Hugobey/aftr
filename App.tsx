@@ -14,12 +14,14 @@ import JoinDumpScreen from './screens/JoinDumpScreen';
 import DumpDetailScreen from './screens/DumpDetailScreen';
 import InviteScreen from './screens/InviteScreen';
 import SelectedPhotosScreen from './screens/SelectedPhotoScreen';
+import MembersScreen from './screens/MemberScreen';
 
 export type RootStackParamList = {
   Home: undefined;
   CreateDump: undefined;
   JoinDump: undefined;
   DumpDetail: { dumpId: string };
+  Members: { dumpId: string };
   Invite: { dumpId: string };
   SelectedPhotos: {
     dumpId?: string;
@@ -34,13 +36,15 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
 
-  const hydrated = useDeviceStore((s) => s.hydrated);
-  const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
+const hydrated = useDeviceStore((s) => s.hydrated);
+const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
+// const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
   const fetchDumps = useDumpsStore((s) => s.fetchDumps);
 
   useEffect(() => {
     if (!hydrated) return;
-    ensureDeviceId();   // first launch → creates deviceId
+    // ensureDeviceId();   // first launch → creates deviceId
+    normalizeCreatedIds(); // normalize created IDs
     fetchDumps();       // load real dumps into Zustand
   }, [hydrated]);
 
@@ -61,6 +65,7 @@ export default function App() {
           <Stack.Screen name="DumpDetail" component={DumpDetailScreen} />
           <Stack.Screen name="Invite" component={InviteScreen} />
           <Stack.Screen name="SelectedPhotos" component={SelectedPhotosScreen} />
+          <Stack.Screen name="Members" component={MembersScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

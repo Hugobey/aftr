@@ -21,6 +21,7 @@ import ConfirmSheet from '../components/ConfirmSheet';
 import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
+import MembersScreen from './MemberScreen';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -181,7 +182,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           <View style={styles.rowRight}>
             <Pressable
               onPress={() => {
-                // later: navigation.navigate('Members', { dumpId: current.id })
+                navigation.navigate('Members', { dumpId: current.id })
               }}
               hitSlop={8}
             >
