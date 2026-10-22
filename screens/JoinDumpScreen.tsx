@@ -14,6 +14,7 @@ import Header from '../components/Header';
 import { parseJoinCode } from '../utils/parseJoinCode';
 import { getDumpByInviteCode } from '../lib/dump';
 import { useDeviceStore } from '../store/deviceStore';
+import { addDumpMember } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinDump'>;
 
@@ -42,11 +43,29 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
     try {
       const dump = await getDumpByInviteCode(code);
-      // addJoinedId(dump.id);
-      // navigation.replace('DumpDetail', { dumpId: dump.id });
+      const dumpId = dump.id;
+      const dumpName = dump.name;
+
+      const displayName = useDeviceStore.getState().displayName?.trim();
+      const ensureDeviceId = useDeviceStore.getState().ensureDeviceId;
+      const addJoinedId = useDeviceStore.getState().addJoinedId;
+      // Already have a name → join immediately
+      if (displayName) {
+        await addDumpMember({
+          dumpId,
+          deviceId: ensureDeviceId(),
+          displayName,
+          role: 'member',
+        });
+        addJoinedId(dumpId);
+        navigation.replace('DumpDetail', { dumpId });
+        return;
+      };
+
+      // No name → collect it
       navigation.replace('JoinProfile', {
-        dumpId: dump.id,
-        dumpName: dump.name, // or dump.title depending on your map
+        dumpId,
+        dumpName,
       });
     } catch {
       setError('Dump not found');

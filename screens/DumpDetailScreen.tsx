@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
@@ -46,21 +47,27 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
     fetchDump(dumpId);
   }, [dumpId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await getDumpMembers(dumpId);
-        if (!cancelled) setMemberCount(rows.length);
-      } catch (e) {
-        console.error('members count', e);
-        if (!cancelled) setMemberCount(0);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+
+      (async () => {
+        try {
+          // dump payload
+          await fetchDump(dumpId);
+          // members
+          const rows = await getDumpMembers(dumpId);
+          if (!cancelled) setMemberCount(rows.length);
+        } catch (e) {
+          console.error('DumpDetail focus refresh', e);
+          if (!cancelled) setMemberCount(0);
+        }
+      })();
+      return () => {
+        cancelled = true;
       };
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [dumpId]);
+  }, [dumpId, fetchDump])
+);
 
   const photos = current?.photoUrls ?? [];
   const photoItems = current?.photoItems ?? [];
