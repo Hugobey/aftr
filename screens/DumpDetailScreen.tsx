@@ -21,7 +21,7 @@ import ConfirmSheet from '../components/ConfirmSheet';
 import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
-import MembersScreen from './MemberScreen';
+import { getDumpMembers } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -40,16 +40,33 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [memberCount, setMemberCount] = useState(0);
 
   useEffect(() => {
     fetchDump(dumpId);
+  }, [dumpId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getDumpMembers(dumpId);
+        if (!cancelled) setMemberCount(rows.length);
+      } catch (e) {
+        console.error('members count', e);
+        if (!cancelled) setMemberCount(0);
+      };
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [dumpId]);
 
   const photos = current?.photoUrls ?? [];
   const photoItems = current?.photoItems ?? [];
   const cover = current?.image ?? photos[0] ?? null;
   // MVP: no real members table yet
-  const memberCount = 1;
+  // const memberCount = 1;
 
   const handleLeave = () => {
     removeJoinedId(dumpId);
