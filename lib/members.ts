@@ -40,11 +40,40 @@ export async function getDumpMembers(dumpId: string) {
   return data ?? [];
 }
 
-export async function removeDumpMember(memberId: string) {
-  const { error } = await supabase
-    .from('dump_members')
-    .delete()
-    .eq('id', memberId);
+export async function removeDumpMember(params: {
+  dumpId: string;
+  /** dump_members row id */
+  memberId?: string;
+  /** or target device */
+  deviceId?: string;
+}) {
+  const { dumpId, memberId, deviceId } = params;
 
+  let query = supabase.from('dump_members').delete().eq('dump_id', dumpId);
+
+  if (memberId) {
+    query = query.eq('id', memberId);
+  } else if (deviceId) {
+    query = query.eq('device_id', deviceId);
+  } else {
+    throw new Error('memberId or deviceId required');
+  }
+
+  const { error } = await query;
   if (error) throw error;
-}
+};
+
+  export async function isDeviceMemberOfDump(
+    dumpId: string,
+    deviceId: string
+  ): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('dump_members')
+      .select('id')
+      .eq('dump_id', dumpId)
+      .eq('device_id', deviceId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return !!data;
+  }

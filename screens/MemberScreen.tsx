@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +19,7 @@ import { Colors } from '../constants/Colors';
 import { useDeviceStore } from '../store/deviceStore';
 import { useDumpsStore } from '../store/dumpStore';
 import { getDumpMembers } from '../lib/members';
+import { removeDumpMember } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Members'>;
 
@@ -116,12 +118,20 @@ export default function MembersScreen({ navigation, route }: Props) {
     if (!removeTarget) return;
     setRemoving(true);
     try {
-      // later: await removeDumpMember(...) + removeJoinedId on their side
+      await removeDumpMember({
+        dumpId,
+        memberId: removeTarget.id,
+        // or: deviceId: removeTarget.deviceId,
+      });
+
       setRemoveTarget(null);
-      await loadMembers();
+      await loadMembers(); // this screen’s list
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Error', 'Could not remove this member.');
     } finally {
       setRemoving(false);
-    }
+    };
   };
 
   return (

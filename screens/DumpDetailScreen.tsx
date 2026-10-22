@@ -23,6 +23,7 @@ import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
 import { getDumpMembers } from '../lib/members';
+import { isDeviceMemberOfDump } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -53,27 +54,39 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
       (async () => {
         try {
-          // dump payload
+          const deviceId = useDeviceStore.getState().ensureDeviceId();
+          const stillIn = await isDeviceMemberOfDump(dumpId, deviceId);
+
+          if (cancelled) return;
+
+          if (!stillIn) {
+            useDeviceStore.getState().removeJoinedId?.(dumpId);
+            // if you only have remove from array:
+            // patch store to filter joinedIds
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'Home' }],
+              })
+            );
+            return;
+          };
+
           await fetchDump(dumpId);
-          // members
           const rows = await getDumpMembers(dumpId);
           if (!cancelled) setMemberCount(rows.length);
         } catch (e) {
-          console.error('DumpDetail focus refresh', e);
-          if (!cancelled) setMemberCount(0);
+          console.error('DumpDetail access check', e);
         }
       })();
       return () => {
         cancelled = true;
       };
-  }, [dumpId, fetchDump])
-);
-
+    }, [dumpId, fetchDump, navigation])
+  )
   const photos = current?.photoUrls ?? [];
   const photoItems = current?.photoItems ?? [];
   const cover = current?.image ?? photos[0] ?? null;
-  // MVP: no real members table yet
-  // const memberCount = 1;
 
   const handleLeave = () => {
     removeJoinedId(dumpId);
@@ -249,7 +262,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           onClose={() => setViewerIndex(null)}
           onDelete={handleDeletePhoto}
         />
-      )}  
+      )}
 
       <ConfirmSheet
         visible={leaveOpen}
