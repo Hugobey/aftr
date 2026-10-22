@@ -1,10 +1,9 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,7 +23,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'JoinProfile'>;
 export default function JoinProfileScreen({ navigation, route }: Props) {
   const { dumpId, dumpName } = route.params;
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef<ScrollView>(null);
 
   const storedName = useDeviceStore((s) => s.displayName);
   const setDisplayName = useDeviceStore((s) => s.setDisplayName);
@@ -33,14 +31,9 @@ export default function JoinProfileScreen({ navigation, route }: Props) {
 
   const [name, setName] = useState(storedName?.trim() ?? '');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const ready = name.trim().length > 0;
-
-  const handleFocus = () => {
-    // Let the keyboard open, then scroll input into view
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: 100, animated: true });    }, 100);
-  };
 
   const handleEnter = async () => {
     if (!ready || loading) return;
@@ -48,8 +41,8 @@ export default function JoinProfileScreen({ navigation, route }: Props) {
       setLoading(true);
       const displayName = name.trim();
       const deviceId = ensureDeviceId();
-
       setDisplayName(displayName);
+      console.log('5 after setDisplayName');
 
       await addDumpMember({
         dumpId,
@@ -69,61 +62,50 @@ export default function JoinProfileScreen({ navigation, route }: Props) {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <Header showBack />
+      {/* Dump lives in the chrome — not next to YOUR NAME */}
+      <Header
+        showBack
+        rightLabel={dumpName ? dumpName.toUpperCase() : undefined}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 4 : 0}
       >
-        <ScrollView
-          ref={scrollRef}
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={styles.body}>
           <Text style={styles.eyebrow}>YOU’RE IN</Text>
-          <Text style={styles.title}>
+          <Text style={[styles.title, focused && styles.titleCompact]}>
             WHO’S{'\n'}JOINING?
           </Text>
 
-          {!!dumpName && (
-            <Text style={styles.dumpName}>{dumpName}</Text>
-          )}
+          {/* Form only — one label, one field */}
+          <View style={[styles.form, focused && styles.formCompact]}>
+            <Text style={styles.label}>YOUR NAME</Text>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="E.G. SAM"
+              placeholderTextColor="#555"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={styles.input}
+              returnKeyType="done"
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              onSubmitEditing={handleEnter}
+            />
+            <Text style={styles.hint}>
+              SHOWN TO OTHERS IN THE MEMBERS LIST.
+            </Text>
+          </View>
+        </View>
 
-          <Text style={styles.label}>YOUR NAME</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="E.G. SAM"
-            placeholderTextColor="#555"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            style={styles.input}
-            returnKeyType="done"
-            onFocus={handleFocus}
-            onSubmitEditing={handleEnter}
-          />
-
-          <Text style={styles.hint}>
-            SHOWN TO OTHERS IN THE MEMBERS LIST.
-          </Text>
-
-          {/* Extra space so the field can scroll above the keyboard */}
-          <View style={{ height: 160 }} />
-        </ScrollView>
-
-        <View
-          style={[styles.bottomBar, { paddingBottom: 16 }]}
-        >
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom }]}>
           <Pressable
             disabled={!ready || loading}
             onPress={handleEnter}
-            style={[
-              styles.cta,
-              ready && !loading && styles.ctaActive,
-            ]}
+            style={[styles.cta, ready && !loading && styles.ctaActive]}
           >
             <Text
               style={[
@@ -148,60 +130,61 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
+  body: {
+    flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 36,
-    paddingBottom: 24,
-    // no flex: 1 — content must be able to grow so ScrollView can scroll
+    paddingTop: 28,
   },
   eyebrow: {
     color: Colors.accent,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '900',
     letterSpacing: 2.2,
   },
   title: {
     color: '#fff',
-    fontSize: 52,
-    lineHeight: 50,
+    fontSize: 48,
+    lineHeight: 46,
     fontWeight: '900',
     letterSpacing: -2,
-    marginTop: 20,
+    marginTop: 14,
   },
-  dumpName: {
-    color: '#888',
-    fontSize: 14,
-    fontWeight: '900',
-    letterSpacing: 1.4,
-    marginTop: 16,
-    textTransform: 'uppercase',
+  titleCompact: {
+    fontSize: 36,
+    lineHeight: 34,
+    marginTop: 8,
+  },
+  form: {
+    marginTop: 40,
+  },
+  formCompact: {
+    marginTop: 24,
   },
   label: {
     color: '#888',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 1.8,
-    marginTop: 48,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   input: {
     color: '#fff',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
     borderBottomWidth: 1,
     borderBottomColor: '#333',
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   hint: {
     color: '#555',
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.2,
-    marginTop: 16,
+    marginTop: 12,
   },
   bottomBar: {
     paddingHorizontal: 28,
-    paddingTop: 16,
+    paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#222',
     backgroundColor: Colors.background,

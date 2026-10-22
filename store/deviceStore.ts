@@ -36,6 +36,11 @@ export const useDeviceStore = create<DeviceState>()(
       hydrated: false,
       joinedIds: [],
       createdIds: [],
+      displayName: null, // ← was missing
+
+      setDisplayName: (displayName: string) => {
+        set({ displayName });
+      }, // ← was missing
 
       ensureDeviceId: () => {
         const existing = get().deviceId;
