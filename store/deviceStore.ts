@@ -8,6 +8,9 @@ type DeviceState = {
   hydrated: boolean;
   joinedIds: string[];
   createdIds: string[];
+  displayName: string | null;
+  
+  setDisplayName: (name: string) => void;
 
   ensureDeviceId: () => string;
   setHydrated: (value: boolean) => void;

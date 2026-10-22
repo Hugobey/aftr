@@ -42,8 +42,12 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
     try {
       const dump = await getDumpByInviteCode(code);
-      addJoinedId(dump.id);
-      navigation.replace('DumpDetail', { dumpId: dump.id });
+      // addJoinedId(dump.id);
+      // navigation.replace('DumpDetail', { dumpId: dump.id });
+      navigation.replace('JoinProfile', {
+        dumpId: dump.id,
+        dumpName: dump.name, // or dump.title depending on your map
+      });
     } catch {
       setError('Dump not found');
       setScanned(false); // allow retry

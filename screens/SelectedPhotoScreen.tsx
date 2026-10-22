@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
 import { useCreateDumpStore } from '../store/createDumpStore';
 import { createDump, addPhotosToDump } from '../lib/dump';
+import { addDumpMember } from '../lib/members';
 import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
@@ -24,21 +26,21 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SelectedPhotos'>;
 const { width } = Dimensions.get('window');
 const GAP = 4;
 const COLS = 3;
-const HORIZONTAL_PADDING = 20;   // left + right padding of the content
-const ITEM_SIZE = (width - HORIZONTAL_PADDING * 2 - GAP * (COLS - 1)) / COLS;
+const HORIZONTAL_PADDING = 20;
+const ITEM_SIZE =
+  (width - HORIZONTAL_PADDING * 2 - GAP * (COLS - 1)) / COLS;
 
 export default function SelectedPhotosScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
 
   const {
-    dumpId, 
+    dumpId,
     maxPhotos = 10,
     title = 'SELECTED PHOTOS',
     confirmLabel = 'CONFIRM',
   } = route.params ?? {};
 
   const isEditing = !!dumpId;
-
   const [loading, setLoading] = useState(false);
 
   const {
@@ -75,40 +77,54 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
   const handleConfirm = async () => {
     if (loading) return;
+
     if (photoUris.length === 0 && isEditing) {
       Alert.alert('No photos', 'Add at least one photo.');
       return;
-    };
-    
-    
+    }
+
     try {
       setLoading(true);
-      
+
+      // —— Add photos to existing dump ——
       if (isEditing) {
-        // Existing dump → only append photos
-        await addPhotosToDump(dumpId, photoUris);
-        reset(); // clears local picker state only
-        navigation.replace('DumpDetail', { dumpId });
+        await addPhotosToDump(dumpId!, photoUris);
+        reset();
+        navigation.replace('DumpDetail', { dumpId: dumpId! });
         return;
       }
-      
-      // New dump
+
+      // —— Create new dump ——
       if (!name.trim()) {
         Alert.alert('Error', 'Dump name is missing.');
         return;
       }
-      
+
       const dump = await createDump({
         name,
         coverUri,
         isOpen,
         date: new Date().toISOString().split('T')[0],
       });
-      addCreatedId(dump.id); // string only  
-          
+
+      // Local ownership (must be string id)
+      addCreatedId(dump.id);
+
+      // Host member row (visible on other devices)
+      const deviceId = useDeviceStore.getState().ensureDeviceId();
+      const displayName =
+        useDeviceStore.getState().displayName?.trim() || 'HOST';
+
+      await addDumpMember({
+        dumpId: dump.id,
+        deviceId,
+        displayName,
+        role: 'host',
+      });
+
       if (photoUris.length > 0) {
         await addPhotosToDump(dump.id, photoUris);
-      };
+      }
 
       reset();
       navigation.replace('DumpDetail', { dumpId: dump.id });
@@ -122,7 +138,7 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
       );
     } finally {
       setLoading(false);
-    };
+    }
   };
 
   return (
@@ -137,7 +153,9 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
         <Text style={styles.subtitle}>
           {photoUris.length === 0
             ? 'No photos selected yet'
-            : `${photoUris.length} photo${photoUris.length > 1 ? 's' : ''} selected`}
+            : `${photoUris.length} photo${
+                photoUris.length > 1 ? 's' : ''
+              } selected`}
         </Text>
 
         <View style={styles.grid}>
@@ -171,13 +189,17 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
           disabled={loading}
           onPress={handleConfirm}
         >
-          <Text style={styles.confirmText}>
-           {loading
-            ? isEditing
-              ? 'ADDING...'
-              : 'CREATING...'
-            : `${confirmLabel}  ↗`
-          }
+          <Text
+            style={[
+              styles.confirmText,
+              loading && styles.confirmTextDisabled,
+            ]}
+          >
+            {loading
+              ? isEditing
+                ? 'ADDING...'
+                : 'CREATING...'
+              : `${confirmLabel}  ↗`}
           </Text>
         </Pressable>
       </View>
@@ -214,7 +236,8 @@ const styles = StyleSheet.create({
   },
   item: {
     width: ITEM_SIZE,
-    height: ITEM_SIZE, // slightly taller looks better for photos    backgroundColor: '#111',
+    height: ITEM_SIZE,
+    backgroundColor: '#111',
     position: 'relative',
   },
   image: {
