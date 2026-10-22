@@ -16,6 +16,7 @@ import InviteScreen from './screens/InviteScreen';
 import SelectedPhotosScreen from './screens/SelectedPhotoScreen';
 import MembersScreen from './screens/MemberScreen';
 import JoinProfileScreen from './screens/JoinProfileScreen';
+import HostProfileScreen from './screens/HostProfileScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   Members: { dumpId: string };
   Invite: { dumpId: string };
   JoinProfile: { dumpId: string; dumpName?: string };
+  HostProfile: undefined;
   SelectedPhotos: {
     dumpId?: string;
     maxPhotos?: number;
@@ -69,6 +71,7 @@ const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
           <Stack.Screen name="SelectedPhotos" component={SelectedPhotosScreen} />
           <Stack.Screen name="Members" component={MembersScreen} />
           <Stack.Screen name="JoinProfile" component={JoinProfileScreen} />
+          <Stack.Screen name="HostProfile" component={HostProfileScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

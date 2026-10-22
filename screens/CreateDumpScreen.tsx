@@ -21,6 +21,7 @@ import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import { pickImages } from '../utils/pickImages';
 import { useCreateDumpStore } from '../store/createDumpStore';
+import { useDeviceStore } from '../store/deviceStore';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
@@ -57,6 +58,12 @@ export default function CreateDumpScreen({ navigation }: Props) {
   const handleCreate = () => {
     if (!isReady || loading) return;
     Keyboard.dismiss();
+
+    const name = useDeviceStore.getState().displayName?.trim();
+    if (!name) {
+      navigation.navigate('HostProfile');
+      return;
+    }
 
     // Go to SelectedPhotos with 0 photos
     navigation.navigate('SelectedPhotos', {

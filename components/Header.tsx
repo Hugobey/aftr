@@ -1,4 +1,4 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, Vibration } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from './Icon';
 import { Colors } from '../constants/Colors';
@@ -47,7 +47,12 @@ export default function Header({
           </Pressable>
 
           {/* Center - Logo */}
-          <Pressable onLongPress={onLogoLongPress}>
+          <Pressable 
+            delayLongPress={800}
+            onLongPress={() => {
+            Vibration.vibrate(40);
+            onLogoLongPress?.();
+          }}>
             <Image
               source={require('../assets/images/AFTR_logo..png')}
               style={styles.logo}

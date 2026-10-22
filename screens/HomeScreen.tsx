@@ -31,6 +31,7 @@ export default function HomeScreen({ navigation }: Props) {
 
   const createdIds = useDeviceStore((s) => s.createdIds);
   const joinedIds = useDeviceStore((s) => s.joinedIds);
+  const displayName = useDeviceStore((s) => s.displayName);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,13 +55,32 @@ export default function HomeScreen({ navigation }: Props) {
   const hasDumps = totalCount > 0;
 
 
+  // DEBUG
+  const clearName = () => {
+    const before = useDeviceStore.getState().displayName;
+    useDeviceStore.getState().setDisplayName(null as any);
+    // if setDisplayName only accepts string, use:
+    // useDeviceStore.setState({ displayName: null });
+
+    const after = useDeviceStore.getState().displayName;
+    console.log('DEBUG clear displayName', { before, after });
+  };
+
+
   return (
     <View style={styles.screen}>
       <View style={{ paddingTop: insets.top }}>
         <Header
           variant="home"
-          onPlusPress={() => navigation.navigate('CreateDump')}
+          onPlusPress={() => {
+            if (!displayName?.trim()) {
+              navigation.navigate('HostProfile');
+            } else {
+              navigation.navigate('CreateDump');
+            }
+          }}
           onScanPress={() => navigation.navigate('JoinDump')}
+          onLogoLongPress={clearName}
         />
       </View>
 
