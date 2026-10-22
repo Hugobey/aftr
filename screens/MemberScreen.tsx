@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -15,15 +17,16 @@ import ConfirmSheet from '../components/ConfirmSheet';
 import { Colors } from '../constants/Colors';
 import { useDeviceStore } from '../store/deviceStore';
 import { useDumpsStore } from '../store/dumpStore';
+import { getDumpMembers } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Members'>;
 
 type MemberRow = {
-  id: string;
+  id: string; // dump_members.id
+  deviceId: string;
   label: string;
   role: 'HOST' | 'MEMBER';
   isYou: boolean;
-  /** ISO date when they joined / created — MVP uses "now" for this device */
   joinedAt: string;
 };
 
@@ -52,20 +55,59 @@ export default function MembersScreen({ navigation, route }: Props) {
   const deviceId = useDeviceStore((s) => s.deviceId);
   const isHost = hasCreated(dumpId);
 
+  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [removeTarget, setRemoveTarget] = useState<MemberRow | null>(null);
   const [removing, setRemoving] = useState(false);
 
-  // MVP: only this device. Later map dump_members rows here.
-  const members: MemberRow[] = useMemo(() => {
-    const you: MemberRow = {
-      id: deviceId ?? 'you',
-      label: 'YOU',
-      role: isHost ? 'HOST' : 'MEMBER',
-      isYou: true,
-      joinedAt: new Date().toISOString(),
-    };
-    return [you];
-  }, [deviceId, isHost]);
+  const loadMembers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const rows = await getDumpMembers(dumpId);
+
+      const mapped: MemberRow[] = rows.map((r) => {
+        const role = r.role === 'host' ? 'HOST' : 'MEMBER';
+        const isYou = !!deviceId && r.device_id === deviceId;
+        const rawName = (r.display_name || '').trim();
+
+        // Never use "HOST" as the person's name
+        const label = isYou
+          ? 'YOU'
+          : rawName && rawName.toUpperCase() !== 'HOST'
+            ? rawName
+            : 'SOMEONE';
+
+        return {
+          id: r.id,
+          deviceId: r.device_id,
+          label,
+          role,
+          isYou,
+          joinedAt: r.joined_at ?? new Date().toISOString(),
+        };
+      });
+
+      // Host first, then others
+      mapped.sort((a, b) => {
+        if (a.role === 'HOST' && b.role !== 'HOST') return -1;
+        if (b.role === 'HOST' && a.role !== 'HOST') return 1;
+        return 0;
+      });
+
+      setMembers(mapped);
+    } catch (e) {
+      console.error('loadMembers', e);
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [dumpId, deviceId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadMembers();
+    }, [loadMembers])
+  );
 
   const title = current?.title ?? 'DUMP';
   const hostMember = members.find((m) => m.role === 'HOST');
@@ -74,8 +116,9 @@ export default function MembersScreen({ navigation, route }: Props) {
     if (!removeTarget) return;
     setRemoving(true);
     try {
-      // later: await removeMemberFromDump(dumpId, removeTarget.id)
+      // later: await removeDumpMember(...) + removeJoinedId on their side
       setRemoveTarget(null);
+      await loadMembers();
     } finally {
       setRemoving(false);
     }
@@ -111,41 +154,48 @@ export default function MembersScreen({ navigation, route }: Props) {
           </Text>
         )}
 
-        <View style={styles.list}>
-          {members.map((m) => (
-            <View key={m.id} style={styles.row}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {m.label.slice(0, 1)}
-                </Text>
-              </View>
-
-              <View style={styles.meta}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.name}>{m.label}</Text>
-                  {m.role === 'HOST' && (
-                    <View style={styles.hostBadge}>
-                      <Text style={styles.hostBadgeText}>HOST</Text>
-                    </View>
-                  )}
+        {loading ? (
+          <ActivityIndicator color={Colors.accent} style={{ marginTop: 40 }} />
+        ) : (
+          <View style={styles.list}>
+            {members.map((m) => (
+              <View key={m.id} style={styles.row}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {m.label.slice(0, 1)}
+                  </Text>
                 </View>
-                <Text style={styles.joined}>
-                  {formatJoinedAt(m.joinedAt)}
-                </Text>
-              </View>
 
-              {/* Host can remove others — not themselves */}
-              {isHost && !m.isYou && (
-                <Pressable
-                  hitSlop={10}
-                  onPress={() => setRemoveTarget(m)}
-                >
-                  <Text style={styles.remove}>REMOVE</Text>
-                </Pressable>
-              )}
-            </View>
-          ))}
-        </View>
+                <View style={styles.meta}>
+                  <View style={styles.nameRow}>
+                    <Text style={styles.name}>{m.label}</Text>
+                    {m.role === 'HOST' && (
+                      <View style={styles.hostBadge}>
+                        <Text style={styles.hostBadgeText}>HOST</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.joined}>
+                    {formatJoinedAt(m.joinedAt)}
+                  </Text>
+                </View>
+
+                {isHost && !m.isYou && (
+                  <Pressable
+                    hitSlop={10}
+                    onPress={() => setRemoveTarget(m)}
+                  >
+                    <Text style={styles.remove}>REMOVE</Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+
+            {members.length === 0 && (
+              <Text style={styles.empty}>NO MEMBERS YET</Text>
+            )}
+          </View>
+        )}
       </ScrollView>
 
       <ConfirmSheet
@@ -273,5 +323,12 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 1.2,
+  },
+  empty: {
+    color: '#666',
+    fontWeight: '900',
+    letterSpacing: 1.4,
+    textAlign: 'center',
+    marginTop: 32,
   },
 });
