@@ -24,6 +24,7 @@ import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
 import { getDumpMembers } from '../lib/members';
 import { isDeviceMemberOfDump } from '../lib/members';
+import { removeDumpMember } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -88,15 +89,28 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const photoItems = current?.photoItems ?? [];
   const cover = current?.image ?? photos[0] ?? null;
 
-  const handleLeave = () => {
-    removeJoinedId(dumpId);
-    setLeaveOpen(false);
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      })
-    );
+  const handleLeave = async () => {
+    try {
+      const deviceId = useDeviceStore.getState().ensureDeviceId();
+
+      await removeDumpMember({
+        dumpId,
+        deviceId, // delete this device’s row
+      });
+
+      removeJoinedId(dumpId);
+      setLeaveOpen(false);
+
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        })
+      );
+    } catch (e) {
+      console.error('leave dump', e);
+      // optional Alert
+    }
   };
 
   const handleDeletePhoto = async (photo: {

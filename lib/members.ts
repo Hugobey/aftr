@@ -40,28 +40,28 @@ export async function getDumpMembers(dumpId: string) {
   return data ?? [];
 }
 
-export async function removeDumpMember(params: {
-  dumpId: string;
-  /** dump_members row id */
-  memberId?: string;
-  /** or target device */
-  deviceId?: string;
-}) {
-  const { dumpId, memberId, deviceId } = params;
+  export async function removeDumpMember(params: {
+    dumpId: string;
+    memberId?: string;
+    deviceId?: string;
+  }) {
+    const { dumpId, memberId, deviceId } = params;
 
-  let query = supabase.from('dump_members').delete().eq('dump_id', dumpId);
+    let query = supabase.from('dump_members').delete().eq('dump_id', dumpId);
 
-  if (memberId) {
-    query = query.eq('id', memberId);
-  } else if (deviceId) {
-    query = query.eq('device_id', deviceId);
-  } else {
-    throw new Error('memberId or deviceId required');
+    if (memberId) query = query.eq('id', memberId);
+    else if (deviceId) query = query.eq('device_id', deviceId);
+    else throw new Error('memberId or deviceId required');
+
+    const { data, error } = await query.select(); // force return deleted rows
+
+    console.log('removeDumpMember', { dumpId, memberId, deviceId, data, error });
+
+    if (error) throw error;
+    if (!data?.length) {
+      console.warn('removeDumpMember: 0 rows deleted (RLS or wrong ids)');
+    };
   }
-
-  const { error } = await query;
-  if (error) throw error;
-};
 
   export async function isDeviceMemberOfDump(
     dumpId: string,
