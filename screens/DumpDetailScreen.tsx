@@ -241,9 +241,14 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
                 {memberCount} MEMBERS →
               </Text>
             </Pressable>
-            <Pressable onPress={() => setLeaveOpen(true)} hitSlop={8}>
-              <Text style={styles.leaveLink}>LEAVE DUMP</Text>
-            </Pressable>
+            {isHost ? (
+            // optional later: DELETE DUMP
+              null
+            ) : (
+              <Pressable onPress={() => setLeaveOpen(true)} hitSlop={8}>
+                <Text style={styles.leaveLink}>LEAVE DUMP</Text>
+              </Pressable>
+            )}
           </View>
         </View>
 
