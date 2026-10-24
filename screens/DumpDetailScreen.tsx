@@ -19,12 +19,15 @@ import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
 import ConfirmSheet from '../components/ConfirmSheet';
+import DumpOptionsSheet from '../components/DumpOptionsSheet';
 import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
-import { getDumpMembers } from '../lib/members';
-import { isDeviceMemberOfDump } from '../lib/members';
-import { removeDumpMember } from '../lib/members';
+import {
+  getDumpMembers,
+  isDeviceMemberOfDump,
+  removeDumpMember,
+} from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -40,11 +43,13 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const hasCreated = useDeviceStore((s) => s.hasCreated);
   const isHost = hasCreated(dumpId);
 
-  const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
-  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [longPressedIndex, setLongPressedIndex] = useState<number | null>(null);
   const [memberCount, setMemberCount] = useState(0);
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     fetchDump(dumpId);
@@ -63,8 +68,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
           if (!stillIn) {
             useDeviceStore.getState().removeJoinedId?.(dumpId);
-            // if you only have remove from array:
-            // patch store to filter joinedIds
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
@@ -72,7 +75,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
               })
             );
             return;
-          };
+          }
 
           await fetchDump(dumpId);
           const rows = await getDumpMembers(dumpId);
@@ -81,70 +84,79 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           console.error('DumpDetail access check', e);
         }
       })();
+
       return () => {
         cancelled = true;
       };
     }, [dumpId, fetchDump, navigation])
-  )
+  );
+
   const photos = current?.photoUrls ?? [];
   const photoItems = current?.photoItems ?? [];
   const cover = current?.image ?? photos[0] ?? null;
 
+  const goHome = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      })
+    );
+  };
+
   const handleLeave = async () => {
     try {
       const deviceId = useDeviceStore.getState().ensureDeviceId();
-
-      await removeDumpMember({
-        dumpId,
-        deviceId, // delete this device’s row
-      });
-
+      await removeDumpMember({ dumpId, deviceId });
       removeJoinedId(dumpId);
       setLeaveOpen(false);
-
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        })
-      );
+      goHome();
     } catch (e) {
       console.error('leave dump', e);
-      // optional Alert
+    }
+  };
+
+  const handleDeleteDump = async () => {
+    try {
+      setDeleteOpen(false);
+      // await deleteDump(dumpId);
+      // useDeviceStore.getState().removeCreatedId?.(dumpId);
+      // goHome();
+      console.warn('deleteDump not implemented yet');
+    } catch (e) {
+      console.error('delete dump', e);
     }
   };
 
   const handleDeletePhoto = async (photo: {
-      id: string | null;
-      url: string;
-    }) => {
+    id: string | null;
+    url: string;
+  }) => {
     if (!photo.id || !current?.id) {
       throw new Error('Photo not found.');
-    };
+    }
     const id = current.id;
 
-    // Wait for Supabase only
     await deletePhoto({
       dumpId: id,
       photoId: photo.id,
       url: photo.url,
     });
 
-    // close modal first so you’re not on a deleted index
     setViewerIndex(null);
 
-    // Let React commit the unmount before touching dump state
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => resolve());
     });
 
-    // then refresh detail (current stays visible if Fix 1 is applied)
-    await fetchDump(current.id);
+    await fetchDump(id);
   };
 
   if (loadingDetail && !current) {
     return (
-      <View style={[styles.container, styles.loader, { paddingTop: insets.top }]}>
+      <View
+        style={[styles.container, styles.loader, { paddingTop: insets.top }]}
+      >
         <ActivityIndicator color={Colors.accent} />
       </View>
     );
@@ -152,7 +164,9 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
   if (!current) {
     return (
-      <View style={[styles.container, styles.loader, { paddingTop: insets.top }]}>
+      <View
+        style={[styles.container, styles.loader, { paddingTop: insets.top }]}
+      >
         <Text style={styles.emptyText}>DUMP NOT FOUND</Text>
       </View>
     );
@@ -162,14 +176,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Header
         showBack
-        onBackPress={() => {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: 'Home' }],
-            })
-          );
-        }}
+        onBackPress={goHome}
         rightIcon="share"
         onRightIconPress={() =>
           navigation.navigate('Invite', { dumpId: current.id })
@@ -195,22 +202,12 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
             </View>
           )}
 
-          {isHost && (
-            <Pressable
-              style={styles.menuBtn}
-              onPress={() =>
-                navigation.navigate('EditDump', { dumpId: current.id })
-              }
-              hitSlop={12}
-            >
-              <Text style={styles.menuDots}>⋯</Text>
-            </Pressable>
-          )}
-
           <View style={styles.textBackground} />
 
           <View style={styles.coverContent}>
-            {!!current.date && <Text style={styles.date}>{current.date}</Text>}
+            {!!current.date && (
+              <Text style={styles.date}>{current.date}</Text>
+            )}
             <Text style={styles.title}>{current.title}</Text>
             <View style={styles.statsRow}>
               <Text style={styles.stats}>{current.photos}</Text>
@@ -221,7 +218,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           </View>
         </ImageBackground>
 
-        {/* EVERYONE'S POV */}
         <View style={styles.row}>
           <Text style={styles.rowLabel}>EVERYONE’S POV</Text>
           <Pressable
@@ -238,34 +234,20 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           </Pressable>
         </View>
 
-        {/* HOST CONTROLS / membership */}
         <View style={styles.row}>
-            <Pressable
-              onPress={() => {
-                navigation.navigate('Members', { dumpId: current.id })
-              }}
-              hitSlop={8}
-            >
-              <Text style={styles.membersLink}>
-                {memberCount} MEMBERS →
-              </Text>
-            </Pressable>
-          {/* <Text style={styles.rowLabel}>
-            {isHost ? 'HOST CONTROLS' : 'DUMP'}
-          </Text> */}
-          <View style={styles.rowRight}>
-            {isHost ? (
-            // optional later: DELETE DUMP
-              null
-            ) : (
-              <Pressable onPress={() => setLeaveOpen(true)} hitSlop={8}>
-                <Text style={styles.leaveLink}>LEAVE DUMP</Text>
-              </Pressable>
-            )}
-          </View>
+          <Text style={styles.rowLabel}>MEMBERS</Text>
+          <Pressable
+            onPress={() =>
+              navigation.navigate('Members', { dumpId: current.id })
+            }
+            hitSlop={8}
+          >
+            <Text style={styles.membersLink}>
+              {memberCount} MEMBERS →
+            </Text>
+          </Pressable>
         </View>
 
-        {/* Photo grid */}
         <View style={styles.grid}>
           {photoItems.map((photo, index) => (
             <Pressable
@@ -296,6 +278,17 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         />
       )}
 
+      <DumpOptionsSheet
+        visible={menuOpen}
+        isHost={isHost}
+        onClose={() => setMenuOpen(false)}
+        onEdit={() =>
+          navigation.navigate('EditDump', { dumpId: current.id })
+        }
+        onLeave={() => setLeaveOpen(true)}
+        onDelete={() => setDeleteOpen(true)}
+      />
+
       <ConfirmSheet
         visible={leaveOpen}
         title={`Leave ${current.title}?`}
@@ -305,6 +298,17 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         tone="danger"
         onCancel={() => setLeaveOpen(false)}
         onConfirm={handleLeave}
+      />
+
+      <ConfirmSheet
+        visible={deleteOpen}
+        title={`Delete ${current.title}?`}
+        message="Photos and members will be removed. This can't be undone."
+        cancelLabel="CANCEL"
+        confirmLabel="DELETE"
+        tone="danger"
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={handleDeleteDump}
       />
     </View>
   );
@@ -414,19 +418,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 1.1,
   },
-  rowRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 18,
-  },
   membersLink: {
     color: '#ccc',
-    fontWeight: '900',
-    fontSize: 12,
-    letterSpacing: 1.2,
-  },
-  leaveLink: {
-    color: '#E85A5A',
     fontWeight: '900',
     fontSize: 12,
     letterSpacing: 1.2,
@@ -451,24 +444,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
-  menuBtn: {
-  position: 'absolute',
-  top: 24,
-  right: 24,
-  zIndex: 3,
-  width: 44,
-  height: 44,
-  borderWidth: 1,
-  borderColor: '#666',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: 'rgba(0,0,0,0.5)',
-},
-menuDots: {
-  color: '#fff',
-  fontSize: 22,
-  fontWeight: '900',
-  marginTop: -6,
-  letterSpacing: 1,
-},
 });
