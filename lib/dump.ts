@@ -192,3 +192,35 @@ export async function getDumpByInviteCode(code: string) {
   if (error) throw error;
   return data;
 };
+
+export async function updateDump(params: {
+  id: string;
+  name?: string;
+  date?: string; // ISO yyyy-mm-dd or whatever you store
+  coverUri?: string | null; // local file → upload; http → keep
+  isOpen?: boolean;
+}) {
+  const patch: Record<string, unknown> = {};
+
+  if (params.name != null) patch.name = params.name.trim();
+  if (params.date != null) patch.date = params.date;
+  if (params.isOpen != null) patch.is_open = params.isOpen;
+
+  if (params.coverUri) {
+    if (params.coverUri.startsWith('http')) {
+      patch.cover_url = params.coverUri;
+    } else {
+      patch.cover_url = await uploadPhoto(params.coverUri);
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('dumps')
+    .update(patch)
+    .eq('id', params.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}

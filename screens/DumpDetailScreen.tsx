@@ -192,12 +192,22 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
             </View>
           )}
 
+          {isHost && (
+            <Pressable
+              style={styles.menuBtn}
+              onPress={() =>
+                navigation.navigate('EditDump', { dumpId: current.id })
+              }
+              hitSlop={12}
+            >
+              <Text style={styles.menuDots}>⋯</Text>
+            </Pressable>
+          )}
+
           <View style={styles.textBackground} />
 
           <View style={styles.coverContent}>
-            {!!current.date && (
-              <Text style={styles.date}>{current.date}</Text>
-            )}
+            {!!current.date && <Text style={styles.date}>{current.date}</Text>}
             <Text style={styles.title}>{current.title}</Text>
             <View style={styles.statsRow}>
               <Text style={styles.stats}>{current.photos}</Text>
@@ -227,10 +237,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
 
         {/* HOST CONTROLS / membership */}
         <View style={styles.row}>
-          <Text style={styles.rowLabel}>
-            {isHost ? 'HOST CONTROLS' : 'DUMP'}
-          </Text>
-          <View style={styles.rowRight}>
             <Pressable
               onPress={() => {
                 navigation.navigate('Members', { dumpId: current.id })
@@ -241,6 +247,10 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
                 {memberCount} MEMBERS →
               </Text>
             </Pressable>
+          {/* <Text style={styles.rowLabel}>
+            {isHost ? 'HOST CONTROLS' : 'DUMP'}
+          </Text> */}
+          <View style={styles.rowRight}>
             {isHost ? (
             // optional later: DELETE DUMP
               null
@@ -438,4 +448,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
+  menuBtn: {
+  position: 'absolute',
+  top: 24,
+  right: 24,
+  zIndex: 3,
+  width: 44,
+  height: 44,
+  borderWidth: 1,
+  borderColor: '#666',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(0,0,0,0.5)',
+},
+menuDots: {
+  color: '#fff',
+  fontSize: 22,
+  fontWeight: '900',
+  marginTop: -6,
+  letterSpacing: 1,
+},
 });
