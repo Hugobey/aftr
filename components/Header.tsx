@@ -3,18 +3,25 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from './Icon';
 import { Colors } from '../constants/Colors';
 
+type HeaderIcon = 'share' | 'scan' | 'plus' | 'more' | 'back';
+
 interface HeaderProps {
   variant?: 'default' | 'home';
 
   showBack?: boolean;
-  onBackPress?: () => void;          // ← new
+  onBackPress?: () => void;
 
   rightLabel?: string;
   rightLabelColor?: string;
   onRightPress?: () => void;
 
-  rightIcon?: 'share' | 'scan' | 'plus';
+  /** Primary right icon (e.g. share) */
+  rightIcon?: HeaderIcon;
   onRightIconPress?: () => void;
+
+  /** Secondary right icon (e.g. more / ⋯) */
+  rightIcon2?: HeaderIcon;
+  onRightIcon2Press?: () => void;
 
   onPlusPress?: () => void;
   onScanPress?: () => void;
@@ -29,6 +36,8 @@ export default function Header({
   onRightPress,
   rightIcon,
   onRightIconPress,
+  rightIcon2,
+  onRightIcon2Press,
   onPlusPress,
   onScanPress,
   onLogoLongPress,
@@ -36,23 +45,21 @@ export default function Header({
 }: HeaderProps) {
   const navigation = useNavigation();
 
-  // ========== HOME HEADER ==========
   if (variant === 'home') {
     return (
       <View style={styles.wrapper}>
         <View style={styles.container}>
-          {/* Left - Plus */}
           <Pressable style={styles.iconButton} onPress={onPlusPress}>
             <Icon name="plus" size={24} />
           </Pressable>
 
-          {/* Center - Logo */}
-          <Pressable 
+          <Pressable
             delayLongPress={800}
             onLongPress={() => {
-            Vibration.vibrate(40);
-            onLogoLongPress?.();
-          }}>
+              Vibration.vibrate(40);
+              onLogoLongPress?.();
+            }}
+          >
             <Image
               source={require('../assets/images/AFTR_logo..png')}
               style={styles.logo}
@@ -60,57 +67,54 @@ export default function Header({
             />
           </Pressable>
 
-          {/* Right - Scan */}
           <Pressable style={styles.iconButton} onPress={onScanPress}>
             <Icon name="scan" size={22} />
           </Pressable>
         </View>
-
         <View style={styles.divider} />
       </View>
     );
   }
 
-  // ========== DEFAULT HEADER ==========
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
-        {/* Left */}
         {showBack ? (
-            <Pressable
-                style={styles.iconButton}
-                onPress={() => {
-                if (onBackPress) {
-                    onBackPress();
-                } else {
-                    navigation.goBack();
-                }
-                }}
-            >
-                <Icon name="back" size={24} />
-            </Pressable>
+          <Pressable
+            style={styles.iconButton}
+            onPress={() => {
+              if (onBackPress) onBackPress();
+              else navigation.goBack();
+            }}
+          >
+            <Icon name="back" size={24} />
+          </Pressable>
         ) : (
-            <View style={styles.iconButtonPlaceholder} />
+          <View style={styles.iconButtonPlaceholder} />
         )}
 
-        {/* Right side */}
         <View style={styles.right}>
-          {rightLabel && (
+          {rightLabel ? (
             <Pressable onPress={onRightPress}>
               <Text style={[styles.rightLabel, { color: rightLabelColor }]}>
                 {rightLabel}
               </Text>
             </Pressable>
-          )}
+          ) : null}
 
-          {rightIcon && (
+          {rightIcon ? (
             <Pressable style={styles.iconButton} onPress={onRightIconPress}>
               <Icon name={rightIcon} size={22} />
             </Pressable>
-          )}
+          ) : null}
+
+          {rightIcon2 ? (
+            <Pressable style={styles.iconButton} onPress={onRightIcon2Press}>
+              <Icon name={rightIcon2} size={22} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
-
       <View style={styles.divider} />
     </View>
   );
@@ -121,7 +125,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   container: {
-    height: 64, // smaller header
+    height: 64,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
   right: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    gap: 10,
   },
   rightLabel: {
     fontSize: 14,

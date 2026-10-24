@@ -44,6 +44,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchDump(dumpId);
@@ -173,6 +174,8 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         onRightIconPress={() =>
           navigation.navigate('Invite', { dumpId: current.id })
         }
+        rightIcon2="more"
+        onRightIcon2Press={() => setMenuOpen(true)}
       />
 
       <ScrollView

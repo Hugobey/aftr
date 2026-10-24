@@ -69,6 +69,13 @@ export default function Icon({
         <Path d="m5 12 4 4L19 6" />
       </>
     ),
+    more: (
+      <>
+        <Circle cx="6" cy="12" r="1.5" fill="currentColor" />
+        <Circle cx="12" cy="12" r="1.5" fill="currentColor" />
+        <Circle cx="18" cy="12" r="1.5" fill="currentColor" />
+      </>
+),
   };
 
   return (
