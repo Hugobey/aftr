@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Icon from './Icon';
 
 type Props = {
   visible: boolean;
@@ -45,7 +46,8 @@ export default function DumpOptionsSheet({
                   onEdit?.();
                 }}
               >
-                <Text style={styles.icon}>✎</Text>
+                {/* <Text style={styles.icon}>✎</Text> */}
+              <Icon name="edit" size={20} color="#ccc" />
                 <View style={styles.rowText}>
                   <Text style={styles.rowTitle}>Edit dump</Text>
                   <Text style={styles.rowSub}>
@@ -86,7 +88,9 @@ export default function DumpOptionsSheet({
                 onDelete?.();
               }}
             >
-              <Text style={[styles.icon, styles.iconDanger]}>⌫</Text>
+              {/* <Text style={[styles.icon, styles.iconDanger]}>⌫</Text> */}
+              <Icon name="trash" size={20} color="#E85A5A" />
+
               <View style={styles.rowText}>
                 <Text style={[styles.rowTitle, styles.danger]}>
                   Delete dump

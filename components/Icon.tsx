@@ -9,7 +9,10 @@ type IconName =
   | 'share'
   | 'camera'
   | 'link'
-  | 'check';
+  | 'check'
+  | 'more'
+  | 'trash'
+  | 'edit';
 
 interface IconProps {
   name: IconName;
@@ -71,11 +74,25 @@ export default function Icon({
     ),
     more: (
       <>
-        <Circle cx="6" cy="12" r="1.5" fill="currentColor" />
-        <Circle cx="12" cy="12" r="1.5" fill="currentColor" />
-        <Circle cx="18" cy="12" r="1.5" fill="currentColor" />
+        <Circle cx="5" cy="12" r="1.5" fill={stroke} stroke="none" />
+        <Circle cx="12" cy="12" r="1.5" fill={stroke} stroke="none" />
+        <Circle cx="19" cy="12" r="1.5" fill={stroke} stroke="none" />
       </>
-),
+    ),
+    trash: (
+      <>
+        <Path d="M3 6h18" />
+        <Path d="M8 6V4h8v2" />
+        <Path d="M19 6l-1 14H6L5 6" />
+        <Path d="M10 11v6M14 11v6" />
+      </>
+    ),
+    edit: (
+      <>
+        <Path d="M12 20h9" />
+        <Path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+      </>
+    ),
   };
 
   return (
