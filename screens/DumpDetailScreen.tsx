@@ -281,15 +281,14 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
       <DumpOptionsSheet
         visible={menuOpen}
         isHost={isHost}
+        // loading={leavingOrDeleting}
         onClose={() => setMenuOpen(false)}
-        onEdit={() =>
-          navigation.navigate('EditDump', { dumpId: current.id })
-        }
-        onLeave={() => setLeaveOpen(true)}
-        onDelete={() => setDeleteOpen(true)}
+        onEdit={() => navigation.navigate('EditDump', { dumpId })}
+        onLeave={handleLeave}
+        onDelete={handleDeleteDump}
       />
 
-      <ConfirmSheet
+      {/* <ConfirmSheet
         visible={leaveOpen}
         title={`Leave ${current.title}?`}
         message="You'll no longer see or contribute to this Dump."
@@ -309,7 +308,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         tone="danger"
         onCancel={() => setDeleteOpen(false)}
         onConfirm={handleDeleteDump}
-      />
+      /> */}
     </View>
   );
 }
