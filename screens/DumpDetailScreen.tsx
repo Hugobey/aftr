@@ -18,7 +18,6 @@ import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
 import PhotoViewer from '../components/PhotoViewer';
-import ConfirmSheet from '../components/ConfirmSheet';
 import DumpOptionsSheet from '../components/DumpOptionsSheet';
 import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
@@ -28,6 +27,7 @@ import {
   isDeviceMemberOfDump,
   removeDumpMember,
 } from '../lib/members';
+import { deleteDump } from '../lib/dump';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -119,9 +119,9 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const handleDeleteDump = async () => {
     try {
       setDeleteOpen(false);
-      // await deleteDump(dumpId);
-      // useDeviceStore.getState().removeCreatedId?.(dumpId);
-      // goHome();
+      await deleteDump(dumpId);
+      useDeviceStore.getState().removeCreatedId?.(dumpId);
+      goHome();
       console.warn('deleteDump not implemented yet');
     } catch (e) {
       console.error('delete dump', e);
@@ -287,28 +287,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
         onLeave={handleLeave}
         onDelete={handleDeleteDump}
       />
-
-      {/* <ConfirmSheet
-        visible={leaveOpen}
-        title={`Leave ${current.title}?`}
-        message="You'll no longer see or contribute to this Dump."
-        cancelLabel="CANCEL"
-        confirmLabel="LEAVE"
-        tone="danger"
-        onCancel={() => setLeaveOpen(false)}
-        onConfirm={handleLeave}
-      />
-
-      <ConfirmSheet
-        visible={deleteOpen}
-        title={`Delete ${current.title}?`}
-        message="Photos and members will be removed. This can't be undone."
-        cancelLabel="CANCEL"
-        confirmLabel="DELETE"
-        tone="danger"
-        onCancel={() => setDeleteOpen(false)}
-        onConfirm={handleDeleteDump}
-      /> */}
     </View>
   );
 }

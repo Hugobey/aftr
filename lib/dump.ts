@@ -152,6 +152,56 @@ export async function deletePhoto({ dumpId, photoId, url }: DeletePhotoInput) {
   return data;
 };
 
+/** Host: permanently remove dump + its photo rows (+ storage files best-effort) */
+export async function deleteDump(dumpId: string) {
+  // 1) Load photo paths so we can clear storage
+  const { data: photos, error: photosError } = await supabase
+    .from('photos')
+    .select('id, url')
+    .eq('dump_id', dumpId);
+
+  if (photosError) throw photosError;
+
+  // 2) Best-effort storage cleanup (don't block DB delete if this fails)
+  if (photos?.length) {
+    const paths = photos
+      .map((p) => {
+        // public URL → object path inside bucket
+        // e.g. .../object/public/dump-photos/abc.jpg → abc.jpg
+        const marker = '/object/public/dump-photos/';
+        const idx = p.url?.indexOf(marker) ?? -1;
+        return idx >= 0 ? p.url.slice(idx + marker.length) : null;
+      })
+      .filter(Boolean) as string[];
+
+    if (paths.length) {
+      const { error: storageError } = await supabase.storage
+        .from('dump-photos')
+        .remove(paths);
+      if (storageError) {
+        console.log('storage cleanup error:', storageError);
+      }
+    }
+  }
+  // 3) Delete photo rows
+  const { error: deletePhotosError } = await supabase
+    .from('photos')
+    .delete()
+    .eq('dump_id', dumpId);
+
+  if (deletePhotosError) throw deletePhotosError;
+
+  // 4) Delete dump row
+  const { error: deleteDumpError } = await supabase
+    .from('dumps')
+    .delete()
+    .eq('id', dumpId);
+
+  if (deleteDumpError) throw deleteDumpError;
+
+  return true;
+}
+
 export async function getDumps() {
   const { data, error } = await supabase
     .from('dumps')
