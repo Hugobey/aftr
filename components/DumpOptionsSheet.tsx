@@ -1,6 +1,18 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  BackHandler,
+  Dimensions,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from './Icon';
+
+const SCREEN_HEIGHT = Dimensions.get('window').height;
 
 type Props = {
   visible: boolean;
@@ -20,18 +32,90 @@ export default function DumpOptionsSheet({
   onDelete,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+  const [mounted, setMounted] = useState(visible);
+
+  // Open / close animation
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      translateY.setValue(SCREEN_HEIGHT);
+      opacity.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateY, {
+          toValue: 0,
+          damping: 20,
+          stiffness: 220,
+          mass: 0.9,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (mounted) {
+      Animated.parallel([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: SCREEN_HEIGHT,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => {
+        if (finished) setMounted(false);
+      });
+    }
+  }, [visible]);
+
+  // Android hardware back
+  useEffect(() => {
+    if (!visible) return;
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+
+    return () => sub.remove();
+  }, [visible, onClose]);
+
+  if (!mounted) return null;
 
   return (
     <Modal
-      visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
+      visible={mounted}
       onRequestClose={onClose}
+      statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: insets.bottom + 20 }]}
-          onPress={(e) => e.stopPropagation()}
+      <View style={styles.root}>
+        {/* Dim overlay (visual only) */}
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.backdrop, { opacity }]}
+        />
+
+        {/* Tappable area above the sheet */}
+        <Pressable style={styles.flexFill} onPress={onClose} />
+
+        {/* Bottom sheet */}
+        <Animated.View
+          style={[
+            styles.sheet,
+            {
+              paddingBottom: insets.bottom + 20,
+              transform: [{ translateY }],
+            },
+          ]}
         >
           <View style={styles.handle} />
           <Text style={styles.title}>Dump options</Text>
@@ -46,8 +130,7 @@ export default function DumpOptionsSheet({
                   onEdit?.();
                 }}
               >
-                {/* <Text style={styles.icon}>✎</Text> */}
-              <Icon name="edit" size={20} color="#ccc" />
+                <Icon name="edit" size={20} color="#ccc" />
                 <View style={styles.rowText}>
                   <Text style={styles.rowTitle}>Edit dump</Text>
                   <Text style={styles.rowSub}>
@@ -68,7 +151,7 @@ export default function DumpOptionsSheet({
                   onLeave?.();
                 }}
               >
-                <Text style={styles.icon}>↗</Text>
+                <Icon name="arrow" size={20} color="#ccc" />
                 <View style={styles.rowText}>
                   <Text style={styles.rowTitle}>Leave dump</Text>
                   <Text style={styles.rowSub}>
@@ -88,9 +171,7 @@ export default function DumpOptionsSheet({
                 onDelete?.();
               }}
             >
-              {/* <Text style={[styles.icon, styles.iconDanger]}>⌫</Text> */}
               <Icon name="trash" size={20} color="#E85A5A" />
-
               <View style={styles.rowText}>
                 <Text style={[styles.rowTitle, styles.danger]}>
                   Delete dump
@@ -101,17 +182,23 @@ export default function DumpOptionsSheet({
               </View>
             </Pressable>
           )}
-        </Pressable>
-      </Pressable>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.72)',
     justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.78)',
+  },
+  flexFill: {
+    flex: 1,
   },
   sheet: {
     backgroundColor: '#0a0a0a',
@@ -146,15 +233,6 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingVertical: 18,
     paddingHorizontal: 22,
-  },
-  icon: {
-    color: '#ccc',
-    fontSize: 18,
-    width: 24,
-    marginTop: 2,
-  },
-  iconDanger: {
-    color: '#E85A5A',
   },
   rowText: {
     flex: 1,
