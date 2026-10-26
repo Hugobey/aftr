@@ -9,9 +9,11 @@ type DeviceState = {
   joinedIds: string[];
   createdIds: string[];
   displayName: string | null;
+  legalAcceptedAt: string | null;
   
   setDisplayName: (name: string) => void;
-
+  
+  acceptLegal: () => void; // sets ISO timestamp
   ensureDeviceId: () => string;
   setHydrated: (value: boolean) => void;
 
@@ -37,10 +39,25 @@ export const useDeviceStore = create<DeviceState>()(
       joinedIds: [],
       createdIds: [],
       displayName: null, // ← was missing
+      legalAcceptedAt: null,
 
       setDisplayName: (displayName: string) => {
         set({ displayName });
       }, // ← was missing
+
+      acceptLegal: () => set({ legalAcceptedAt: new Date().toISOString() }),
+
+      // debug only
+      resetLegal: () => set({ legalAcceptedAt: null }),
+
+      // optional: full “new install” feel
+      resetDeviceForTesting: () =>
+        set({
+          legalAcceptedAt: null,
+          deviceId: null, // or regenerate on next ensureDeviceId()
+          displayName: null,
+          joinedIds: [],
+        }),
 
       ensureDeviceId: () => {
         const existing = get().deviceId;

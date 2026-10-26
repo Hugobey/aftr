@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Colors } from './constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -18,6 +19,7 @@ import MembersScreen from './screens/MemberScreen';
 import JoinProfileScreen from './screens/JoinProfileScreen';
 import HostProfileScreen from './screens/HostProfileScreen';
 import EditDumpScreen from './screens/EditDumpScreen';
+import LegalGateScreen from './screens/LegalGateScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -29,6 +31,7 @@ export type RootStackParamList = {
   JoinProfile: { dumpId: string; dumpName?: string };
   HostProfile: undefined;
   EditDump: { dumpId: string };
+  LegalGate: { onAccepted: () => void };
   SelectedPhotos: {
     dumpId?: string;
     maxPhotos?: number;
@@ -41,11 +44,30 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <Root />
+    </SafeAreaProvider>
+  );
+};
 
-const hydrated = useDeviceStore((s) => s.hydrated);
-const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
-// const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
+function Root(){
+  const hydrated = useDeviceStore((s) => s.hydrated);
+  const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
+  // const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
   const fetchDumps = useDumpsStore((s) => s.fetchDumps);
+  const legalAcceptedAt = useDeviceStore((s) => s.legalAcceptedAt);
+
+  if (!legalAcceptedAt) {
+    return (
+      <LegalGateScreen
+        onAccepted={() => {
+          // state already set inside acceptLegal();
+          // re-render shows the stack automatically
+        }}
+      />
+    );
+  }
 
   useEffect(() => {
     if (!hydrated) return;
@@ -53,7 +75,6 @@ const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
     normalizeCreatedIds(); // normalize created IDs
     fetchDumps();       // load real dumps into Zustand
   }, [hydrated]);
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>

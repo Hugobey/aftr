@@ -122,7 +122,7 @@ export default function DumpForm({
               </Pressable>
             </View>
 
-            <View style={styles.optionRow}>
+            {/* <View style={styles.optionRow}>
               <View style={styles.optionTextContainer}>
                 <Text style={styles.optionLabel}>OPEN UPLOADS</Text>
                 <Text style={styles.optionHint}>
@@ -135,7 +135,7 @@ export default function DumpForm({
                 trackColor={{ false: '#333', true: Colors.accent }}
                 thumbColor={isOpen ? Colors.accent : '#888'}
               />
-            </View>
+            </View> */}
           </View>
         </ScrollView>
 
