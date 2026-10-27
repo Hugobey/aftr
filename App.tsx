@@ -1,7 +1,10 @@
 // App.tsx
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  type LinkingOptions,
+} from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -26,7 +29,7 @@ import LegalGateScreen from './screens/LegalGateScreen';
 export type RootStackParamList = {
   Home: undefined;
   CreateDump: undefined;
-  JoinDump: undefined;
+  JoinDump: { inviteCode?: string } | undefined;
   DumpDetail: { dumpId: string };
   Members: { dumpId: string };
   Invite: { dumpId: string };
@@ -43,6 +46,15 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['aftr://'],
+  config: {
+    screens: {
+      JoinDump: 'join/:inviteCode',
+    },
+  },
+};
 
 export default function App() {
   return (
@@ -78,7 +90,7 @@ function Root() {
   // 3) Normal app
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
+      <NavigationContainer linking={linking}>
         <StatusBar style="light" />
         <Stack.Navigator
           screenOptions={{

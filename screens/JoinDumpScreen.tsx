@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -19,13 +20,16 @@ import { addDumpMember } from '../lib/members';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinDump'>;
 
-export default function JoinDumpScreen({ navigation }: Props) {
+export default function JoinDumpScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const inviteCode = route.params?.inviteCode;
 
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [joiningFromLink, setJoiningFromLink] = useState(Boolean(inviteCode));
+  const handledInviteLink = useRef(false);
 
   // Scale type from width (base ~390)
   const scale = Math.min(Math.max(width / 390, 0.85), 1.1);
@@ -35,17 +39,14 @@ export default function JoinDumpScreen({ navigation }: Props) {
   // Finder size: square, limited by width and available height
   const finderSize = Math.min(width - pad * 2, height * 0.42, 320);
 
-  useEffect(() => {
-    if (!permission) requestPermission();
-  }, [permission, requestPermission]);
-
-  const handleBarcodeScanned = async ({ data }: { data: string }) => {
-    if (scanned) return;
-    const code = parseJoinCode(data);
+  const handleJoinCode = useCallback(async (rawCode: string) => {
+    const code = parseJoinCode(rawCode);
     if (!code) {
       setError('Invalid QR');
+      setJoiningFromLink(false);
       return;
     }
+
     setScanned(true);
     setError(null);
 
@@ -74,7 +75,25 @@ export default function JoinDumpScreen({ navigation }: Props) {
     } catch {
       setError('Dump not found');
       setScanned(false);
+      setJoiningFromLink(false);
     }
+  }, [navigation]);
+
+  useEffect(() => {
+    if (joiningFromLink || !permission) return;
+    requestPermission();
+  }, [joiningFromLink, permission, requestPermission]);
+
+  useEffect(() => {
+    if (!inviteCode || handledInviteLink.current) return;
+
+    handledInviteLink.current = true;
+    void handleJoinCode(inviteCode);
+  }, [handleJoinCode, inviteCode]);
+
+  const handleBarcodeScanned = ({ data }: { data: string }) => {
+    if (scanned) return;
+    void handleJoinCode(data);
   };
 
   return (
@@ -98,7 +117,7 @@ export default function JoinDumpScreen({ navigation }: Props) {
 
         {/* Camera fills remaining space */}
         <View style={styles.cameraBox}>
-          {permission?.granted && (
+          {!joiningFromLink && permission?.granted && (
             <CameraView
               style={StyleSheet.absoluteFill}
               barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
@@ -114,7 +133,14 @@ export default function JoinDumpScreen({ navigation }: Props) {
             <View style={[styles.corner, styles.bottomRight]} />
           </View>
 
-          {!permission?.granted && (
+          {joiningFromLink && (
+            <View style={styles.joining}>
+              <ActivityIndicator color={Colors.accent} />
+              <Text style={styles.joiningText}>JOINING DUMP...</Text>
+            </View>
+          )}
+
+          {!joiningFromLink && !permission?.granted && (
             <View style={styles.permission}>
               <Text style={styles.cameraIcon}>▣</Text>
               <Text style={styles.permissionTitle}>CAMERA ACCESS NEEDED</Text>
@@ -219,12 +245,24 @@ const styles = StyleSheet.create({
     borderRightWidth: BORDER,
   },
   permission: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
     backgroundColor: 'rgba(0,0,0,0.72)',
     zIndex: 3,
+  },
+  joining: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  joiningText: {
+    color: Colors.accent,
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 1.6,
   },
   cameraIcon: {
     fontSize: 34,

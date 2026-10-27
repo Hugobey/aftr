@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="robots" content="noindex" />
+    <title>Join on AFTR</title>
+    <style>
+      :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; background: #000; color: #fff; }
+      * { box-sizing: border-box; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; }
+      main { width: min(100%, 390px); text-align: center; }
+      .brand { margin: 0 0 84px; font-size: 22px; font-weight: 900; letter-spacing: -1.5px; }
+      .brand span, .eyebrow { color: #d7ff00; }
+      .eyebrow { margin: 0 0 14px; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
+      h1 { margin: 0; font-size: clamp(44px, 14vw, 66px); line-height: .88; letter-spacing: -4px; }
+      .body { margin: 24px auto 34px; max-width: 310px; color: #a8a8a8; font-size: 16px; line-height: 1.5; }
+      .button { display: block; width: 100%; padding: 18px 20px; background: #d7ff00; color: #000; font-size: 15px; font-weight: 900; letter-spacing: .7px; text-decoration: none; }
+      .store { display: none; margin-top: 12px; padding: 16px 20px; border: 1px solid #4b4b4b; color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .7px; text-decoration: none; }
+      .notice { display: none; margin: 18px 0 0; color: #929292; font-size: 13px; line-height: 1.5; }
+      .code { margin-top: 32px; color: #666; font-size: 12px; font-weight: 900; letter-spacing: 1.5px; }
+      .invalid { color: #f18b8b; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">AFTR<span>.</span></p>
+      <p class="eyebrow">YOU'RE INVITED</p>
+      <h1>JOIN THE<br />DUMP.</h1>
+      <p class="body">Open AFTR to join this shared photo collection and add your POV.</p>
+      <a class="button" id="openApp" href="aftr://">OPEN AFTR</a>
+      <a class="store" id="store" href="#" aria-disabled="true">AFTR IS COMING SOON</a>
+      <p class="notice" id="storeNotice">AFTR is not available in the store yet. Check back soon.</p>
+      <p class="code" id="codeLabel"></p>
+    </main>
+    <script>
+      (function () {
+        var pathParts = location.pathname.split('/').filter(Boolean);
+        var queryCode = new URLSearchParams(location.search).get('code');
+        var code = (queryCode || pathParts[pathParts.length - 1] || '').toUpperCase();
+        var validCode = /^[A-Z0-9]{4,10}$/.test(code);
+        var codeLabel = document.getElementById('codeLabel');
+        var openApp = document.getElementById('openApp');
+        var store = document.getElementById('store');
+        var storeNotice = document.getElementById('storeNotice');
+
+        if (!validCode) {
+          codeLabel.textContent = 'THIS INVITE LINK IS INVALID';
+          codeLabel.className = 'code invalid';
+          openApp.style.display = 'none';
+          return;
+        }
+
+        codeLabel.textContent = 'INVITE CODE ' + code;
+        openApp.href = 'aftr://join/' + encodeURIComponent(code);
+
+        var isAndroid = /Android/i.test(navigator.userAgent || '');
+        var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        if (isIOS || isAndroid) {
+          store.style.display = 'block';
+          storeNotice.style.display = 'block';
+          store.addEventListener('click', function (event) {
+            event.preventDefault();
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

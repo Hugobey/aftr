@@ -2,8 +2,8 @@
 export function parseJoinCode(raw: string): string | null {
   const value = raw.trim();
 
-  // https://aftr.app/join/ABC123
-  const web = value.match(/aftr\.app\/join\/([A-Z0-9]+)/i);
+  // https://joinaftr.app/join/ABC123
+  const web = value.match(/(?:join)?aftr\.app\/join\/([A-Z0-9]+)/i);
   if (web?.[1]) return web[1].toUpperCase();
 
   // aftr://join/ABC123

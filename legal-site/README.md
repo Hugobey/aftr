@@ -17,5 +17,11 @@ The published URLs will be:
 
 - `https://joinaftr.app/privacy`
 - `https://joinaftr.app/terms`
+- `https://joinaftr.app/join/INVITE_CODE`
+
+The join page opens AFTR using `aftr://join/INVITE_CODE` for people who already
+have the app. Its store button is intentionally a non-link placeholder until
+the App Store and Google Play listings are live. Replace that placeholder in
+`join/index.html` with the store URLs when they are available.
 
 Use the temporary Vercel URL only for testing. Use the custom domain in App Store Connect and Google Play Console.
