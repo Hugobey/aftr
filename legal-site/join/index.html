@@ -16,11 +16,20 @@
       .eyebrow { margin: 0 0 14px; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
       h1 { margin: 0; font-size: clamp(44px, 14vw, 66px); line-height: .88; letter-spacing: -4px; }
       .body { margin: 24px auto 34px; max-width: 310px; color: #a8a8a8; font-size: 16px; line-height: 1.5; }
-      .button { display: block; width: 100%; padding: 18px 20px; background: #d7ff00; color: #000; font-size: 15px; font-weight: 900; letter-spacing: .7px; text-decoration: none; }
-      .store { display: none; margin-top: 12px; padding: 16px 20px; border: 1px solid #4b4b4b; color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .7px; text-decoration: none; }
+      .button {
+        display: block; width: 100%; padding: 18px 20px; border: 0; cursor: pointer;
+        background: #d7ff00; color: #000; font-size: 15px; font-weight: 900;
+        letter-spacing: .7px; text-decoration: none;
+      }
+      .button:disabled { opacity: 0.5; }
+      .store {
+        display: none; margin-top: 12px; padding: 16px 20px; border: 1px solid #4b4b4b;
+        color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .7px; text-decoration: none;
+      }
       .notice { display: none; margin: 18px 0 0; color: #929292; font-size: 13px; line-height: 1.5; }
       .code { margin-top: 32px; color: #666; font-size: 12px; font-weight: 900; letter-spacing: 1.5px; }
       .invalid { color: #f18b8b; }
+      .hint { margin-top: 12px; color: #666; font-size: 12px; }
     </style>
   </head>
   <body>
@@ -28,40 +37,72 @@
       <p class="brand">AFTR<span>.</span></p>
       <p class="eyebrow">YOU'RE INVITED</p>
       <h1>JOIN THE<br />DUMP.</h1>
-      <p class="body">Open AFTR to join this shared photo collection and add your POV.</p>
-      <a class="button" id="openApp" href="aftr://">OPEN AFTR</a>
-      <a class="store" id="store" href="#" aria-disabled="true">AFTR IS COMING SOON</a>
-      <p class="notice" id="storeNotice">AFTR is not available in the store yet. Check back soon.</p>
+      <p class="body" id="bodyText">
+        Tap below to copy your invite and open AFTR.
+      </p>
+      <button class="button" type="button" id="joinBtn">JOIN THE DUMP</button>
+      <a class="store" id="store" href="#">AFTR IS COMING SOON</a>
+      <p class="notice" id="storeNotice">AFTR is not on the store yet. Install the TestFlight / dev build, then tap join.</p>
       <p class="code" id="codeLabel"></p>
+      <p class="hint" id="hint"></p>
     </main>
     <script>
       (function () {
         var pathParts = location.pathname.split('/').filter(Boolean);
         var queryCode = new URLSearchParams(location.search).get('code');
-        var code = (queryCode || pathParts[pathParts.length - 1] || '').toUpperCase();
+        // /join/ABC123 → use last segment; /join or /join.html → no code from path
+        var last = pathParts[pathParts.length - 1] || '';
+        var fromPath = /^[A-Za-z0-9]{4,10}$/.test(last) ? last : '';
+        var code = String(queryCode || fromPath || '').toUpperCase();
         var validCode = /^[A-Z0-9]{4,10}$/.test(code);
+
         var codeLabel = document.getElementById('codeLabel');
-        var openApp = document.getElementById('openApp');
+        var joinBtn = document.getElementById('joinBtn');
         var store = document.getElementById('store');
         var storeNotice = document.getElementById('storeNotice');
+        var hint = document.getElementById('hint');
 
         if (!validCode) {
           codeLabel.textContent = 'THIS INVITE LINK IS INVALID';
           codeLabel.className = 'code invalid';
-          openApp.style.display = 'none';
+          joinBtn.disabled = true;
+          joinBtn.textContent = 'INVALID LINK';
           return;
         }
 
         codeLabel.textContent = 'INVITE CODE ' + code;
-        openApp.href = 'aftr://join/' + encodeURIComponent(code);
+
+        var deepLink = 'aftr://join/' + encodeURIComponent(code);
+
+        joinBtn.addEventListener('click', function () {
+          joinBtn.disabled = true;
+          joinBtn.textContent = 'OPENING AFTR…';
+          hint.textContent = 'If AFTR asks to paste, choose Allow.';
+
+          var open = function () {
+            // Custom scheme → app (dev build must be installed)
+            window.location.href = deepLink;
+          };
+
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).then(open).catch(open);
+          } else {
+            open();
+          }
+
+          setTimeout(function () {
+            joinBtn.disabled = false;
+            joinBtn.textContent = 'JOIN THE DUMP';
+          }, 1500);
+        });
 
         var isAndroid = /Android/i.test(navigator.userAgent || '');
         var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
         if (isIOS || isAndroid) {
           store.style.display = 'block';
           storeNotice.style.display = 'block';
-          store.addEventListener('click', function (event) {
-            event.preventDefault();
+          store.addEventListener('click', function (e) {
+            e.preventDefault();
           });
         }
       })();
