@@ -1,14 +1,16 @@
+// App.tsx
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Colors } from './constants/Colors';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useEffect } from 'react';
+import { View } from 'react-native';
+
+import { Colors } from './constants/Colors';
 import { useDeviceStore } from './store/deviceStore';
 import { useDumpsStore } from './store/dumpStore';
 
-// Temporary placeholder screens
 import HomeScreen from './screens/HomeScreen';
 import CreateDumpScreen from './screens/CreateDumpScreen';
 import JoinDumpScreen from './screens/JoinDumpScreen';
@@ -31,7 +33,6 @@ export type RootStackParamList = {
   JoinProfile: { dumpId: string; dumpName?: string };
   HostProfile: undefined;
   EditDump: { dumpId: string };
-  LegalGate: { onAccepted: () => void };
   SelectedPhotos: {
     dumpId?: string;
     maxPhotos?: number;
@@ -49,32 +50,32 @@ export default function App() {
       <Root />
     </SafeAreaProvider>
   );
-};
+}
 
-function Root(){
+function Root() {
   const hydrated = useDeviceStore((s) => s.hydrated);
-  const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
-  // const ensureDeviceId = useDeviceStore((s) => s.ensureDeviceId);
-  const fetchDumps = useDumpsStore((s) => s.fetchDumps);
   const legalAcceptedAt = useDeviceStore((s) => s.legalAcceptedAt);
+  const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
+  const fetchDumps = useDumpsStore((s) => s.fetchDumps);
 
-  if (!legalAcceptedAt) {
-    return (
-      <LegalGateScreen
-        onAccepted={() => {
-          // state already set inside acceptLegal();
-          // re-render shows the stack automatically
-        }}
-      />
-    );
+  // Hooks must run every render (no early return above this)
+  useEffect(() => {
+    if (!hydrated || !legalAcceptedAt) return;
+    normalizeCreatedIds();
+    fetchDumps();
+  }, [hydrated, legalAcceptedAt, normalizeCreatedIds, fetchDumps]);
+
+  // 1) Wait for persisted store (AsyncStorage)
+  if (!hydrated) {
+    return <View style={{ flex: 1, backgroundColor: Colors.background }} />;
   }
 
-  useEffect(() => {
-    if (!hydrated) return;
-    // ensureDeviceId();   // first launch → creates deviceId
-    normalizeCreatedIds(); // normalize created IDs
-    fetchDumps();       // load real dumps into Zustand
-  }, [hydrated]);
+  // 2) First launch only
+  if (!legalAcceptedAt) {
+    return <LegalGateScreen onAccepted={() => {}} />;
+  }
+
+  // 3) Normal app
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>

@@ -1,6 +1,7 @@
 // store/dumpsStore.ts
 import { create } from 'zustand';
 import { getDumps, getDump } from '../lib/dump';
+import { useDeviceStore } from './deviceStore';
 
 export type DumpUI = {
   id: string;
@@ -84,14 +85,15 @@ export const useDumpsStore = create<DumpsState>((set, get) => ({
   error: null,
 
   fetchDumps: async () => {
-    // only show full-screen loader on first load
-    const isFirstLoad = get().dumps.length === 0;
-    if (isFirstLoad) set({ loadingList: true, error: null });
-    else set({ error: null });
-
+    set({ loadingList: true, error: null });
     try {
-      const rows = await getDumps();
-      set({ dumps: rows.map(mapDump), loadingList: false });
+      const deviceId = useDeviceStore.getState().ensureDeviceId();
+      const rows = await getDumps(deviceId);
+      const mapped = rows.map(mapDump);
+
+      useDeviceStore.getState().pruneDumpIds(mapped.map((d) => d.id));
+
+      set({ dumps: mapped, loadingList: false });
     } catch (e: any) {
       set({
         error: e.message ?? 'Failed to load dumps',

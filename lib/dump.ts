@@ -202,7 +202,21 @@ export async function deleteDump(dumpId: string) {
   return true;
 }
 
-export async function getDumps() {
+export async function getDumps(deviceId: string) {
+  if (!deviceId) return [];
+
+  // 1) Dumps this device still belongs to
+  const { data: memberships, error: memberError } = await supabase
+    .from('dump_members') // rename if your table is `members`
+    .select('dump_id')
+    .eq('device_id', deviceId);
+
+  if (memberError) throw memberError;
+
+  const ids = (memberships ?? []).map((m) => m.dump_id);
+  if (ids.length === 0) return [];
+
+  // 2) Only those dumps
   const { data, error } = await supabase
     .from('dumps')
     .select(`
@@ -215,6 +229,7 @@ export async function getDumps() {
       invite_code,
       photos ( id, url )
     `)
+    .in('id', ids)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

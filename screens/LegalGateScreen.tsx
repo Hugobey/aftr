@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 import { useDeviceStore } from '../store/deviceStore';
 
-const PRIVACY_URL = 'https://aftr-legal.vercel.app/privacy';
-const TERMS_URL = 'https://aftr-legal.vercel.app/terms';
+const PRIVACY_URL = 'https://joinaftr.app/privacy';
+const TERMS_URL = 'https://joinaftr.app/terms';
 
 type Props = {
   onAccepted: () => void;

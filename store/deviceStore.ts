@@ -10,6 +10,10 @@ type DeviceState = {
   createdIds: string[];
   displayName: string | null;
   legalAcceptedAt: string | null;
+
+  pruneDumpIds: (validIds: string[]) => void;
+  resetLegal: () => void;
+  resetDeviceForTesting: () => void;
   
   setDisplayName: (name: string) => void;
   
@@ -54,9 +58,10 @@ export const useDeviceStore = create<DeviceState>()(
       resetDeviceForTesting: () =>
         set({
           legalAcceptedAt: null,
-          deviceId: null, // or regenerate on next ensureDeviceId()
+          deviceId: null,
           displayName: null,
           joinedIds: [],
+          createdIds: [],
         }),
 
       ensureDeviceId: () => {
@@ -65,6 +70,14 @@ export const useDeviceStore = create<DeviceState>()(
         const id = createId();
         set({ deviceId: id });
         return id;
+      },
+
+      pruneDumpIds: (validIds: string[]) => {
+        const valid = new Set(validIds);
+        set({
+          joinedIds: get().joinedIds.filter((id) => valid.has(id)),
+          createdIds: get().createdIds.filter((id) => valid.has(id)),
+        });
       },
 
       setHydrated: (hydrated) => set({ hydrated }),
