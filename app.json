@@ -28,7 +28,15 @@
           "cameraPermission": "Allow Aftr to access your camera to scan Dump QR codes."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow Aftr to access photos when needed.",
+          "savePhotosPermission": "Allow Aftr to save photos to your library.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ]
   }
 }

@@ -1,28 +1,25 @@
+import { File, Paths } from 'expo-file-system';
+import { Asset, requestPermissionsAsync } from 'expo-media-library';
 import * as Clipboard from 'expo-clipboard';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as MediaLibrary from 'expo-media-library';
 
 export async function savePhotoToLibrary(remoteUrl: string) {
-  const perm = await MediaLibrary.requestPermissionsAsync(true);
+  const perm = await requestPermissionsAsync(true); // write-only is enough to save
   if (perm.status !== 'granted') {
     throw new Error('Photo library permission needed.');
   }
 
-  const path = `${FileSystem.cacheDirectory}aftr-${Date.now()}.jpg`;
-  const downloaded = await FileSystem.downloadAsync(remoteUrl, path);
+  // 1) Download remote image into cache
+  const target = new File(Paths.cache, `aftr-${Date.now()}.jpg`);
+  const downloaded = await File.downloadFileAsync(remoteUrl, target);
 
-  if (downloaded.status !== 200) {
-    throw new Error('Download failed.');
-  }
-
-  await MediaLibrary.saveToLibraryAsync(downloaded.uri);
+  // 2) New MediaLibrary API — saves into the Photos library
+  const asset = await Asset.create(downloaded.uri);
+  return asset;
 }
 
 export async function copyPhotoToClipboard(remoteUrl: string) {
-  const path = `${FileSystem.cacheDirectory}aftr-copy-${Date.now()}.jpg`;
-  await FileSystem.downloadAsync(remoteUrl, path);
-  const base64 = await FileSystem.readAsStringAsync(path, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  const target = new File(Paths.cache, `aftr-copy-${Date.now()}.jpg`);
+  const downloaded = await File.downloadFileAsync(remoteUrl, target);
+  const base64 = await downloaded.base64();
   await Clipboard.setImageAsync(base64);
 }
