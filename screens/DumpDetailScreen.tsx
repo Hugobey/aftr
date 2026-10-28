@@ -17,7 +17,7 @@ import { CommonActions } from '@react-navigation/native';
 import { Colors } from '../constants/Colors';
 import type { RootStackParamList } from '../App';
 import Header from '../components/Header';
-import PhotoViewer from '../components/PhotoViewer';
+import PhotoViewer from '../components/photoViewer/PhotoViewer';
 import DumpOptionsSheet from '../components/DumpOptionsSheet';
 import { deletePhoto } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
@@ -50,6 +50,8 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const deviceId = useDeviceStore((s) => s.deviceId);
 
   useEffect(() => {
     fetchDump(dumpId);
@@ -275,6 +277,14 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           photos={photoItems}
           onClose={() => setViewerIndex(null)}
           onDelete={handleDeletePhoto}
+          canDeletePhoto={(photo) => {
+            if (!photo.id) return false;
+            if (isHost) return true;
+            return photo.deviceId === deviceId;
+          }}
+          // onReport={async (photo) => {
+          //   await reportPhoto({ photoId: photo.id, dumpId, deviceId });
+          // }}
         />
       )}
 

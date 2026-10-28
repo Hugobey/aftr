@@ -25,7 +25,7 @@ export default function InviteScreen({ navigation, route }: Props) {
   const dumpId = route.params?.dumpId;
 
   const [title, setTitle] = useState('YOUR DUMP');
-  const [inviteUrl, setInviteUrl] = useState(`https://joinaftr.app/join/${dumpId ?? ''}`);
+  const [inviteUrl, setInviteUrl] = useState(`https://joinaftr.app/join?code=${dumpId ?? ''}`);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function InviteScreen({ navigation, route }: Props) {
         const dump = await getDump(dumpId);
         if (dump?.name) setTitle(dump.name);
         if (dump?.invite_code) {
-          setInviteUrl(`https://joinaftr.app/join/${dump.invite_code}`);
+          setInviteUrl(`https://joinaftr.app/join?code=${dump.invite_code}`);
         }
       } catch (e) {
         console.log('Invite load error', e);
