@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import Icon from '../Icon';
 
 type Props = {
   top: number;
@@ -11,10 +12,10 @@ export default function PhotoViewerChrome({ top, onClose, onMore }: Props) {
   return (
     <View style={[styles.bar, { top }]} pointerEvents="box-none">
       <Pressable style={styles.btn} onPress={onClose} accessibilityLabel="Close">
-        <Text style={styles.close}>×</Text>
+        <Icon name="close" size={24} color={Colors.text} />
       </Pressable>
       <Pressable style={styles.btn} onPress={onMore} accessibilityLabel="More">
-        <Text style={styles.more}>⋯</Text>
+        <Icon name="more" size={24} color={Colors.text} />
       </Pressable>
     </View>
   );
@@ -23,8 +24,8 @@ export default function PhotoViewerChrome({ top, onClose, onMore }: Props) {
 const styles = StyleSheet.create({
   bar: {
     position: 'absolute',
-    left: 16,
-    right: 16,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     zIndex: 10,

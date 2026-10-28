@@ -12,7 +12,8 @@ type IconName =
   | 'check'
   | 'more'
   | 'trash'
-  | 'edit';
+  | 'edit'
+  | 'close';
 
 interface IconProps {
   name: IconName;
@@ -91,6 +92,11 @@ export default function Icon({
       <>
         <Path d="M12 20h9" />
         <Path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+      </>
+    ),
+    close: (
+      <>
+        <Path d="M18 6 6 18M6 6l12 12" />
       </>
     ),
   };
