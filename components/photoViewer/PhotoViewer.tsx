@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Text,
   View,
-  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -142,38 +141,19 @@ export default function PhotoViewer({
 
     Alert.alert(
       'Report photo',
-      'Report this photo as objectionable content? We’ll open an email so you can send it to the team.',
+      'Report this photo as objectionable content and block its uploader from your view of AFTR.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Report',
+          text: 'Report & block',
           style: 'destructive',
           onPress: async () => {
-            const photoId = activePhoto.id ?? 'unknown';
-            const photoUrl = activePhoto.url ?? '';
-            const subject = encodeURIComponent(`AFTR report — photo ${photoId}`);
-            const body = encodeURIComponent(
-              [
-                'I want to report this photo as objectionable.',
-                '',
-                `Photo ID: ${photoId}`,
-                `Photo URL: ${photoUrl}`,
-                '',
-                'Additional details:',
-                '',
-              ].join('\n'),
-            );
-            const mailUrl = `mailto:hugo@joinaftr.app?subject=${subject}&body=${body}`;
             try {
-              const can = await Linking.canOpenURL(mailUrl);
-              if (!can) {
-                setError('No mail app available.');
-                return;
-              };
-              await Linking.openURL(mailUrl);
+              await onReport?.(activePhoto);
+              Alert.alert('Reported', 'Thanks. We’ll review this report promptly.');
             } catch {
-              setError('Could not open mail app.');
-            };
+              setError('Could not send this report. Please try again.');
+            }
           },
         },
       ],

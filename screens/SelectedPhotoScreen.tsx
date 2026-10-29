@@ -88,7 +88,11 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
 
       // —— Add photos to existing dump ——
       if (isEditing) {
-        await addPhotosToDump(dumpId!, photoUris);
+        await addPhotosToDump(
+          dumpId!,
+          photoUris,
+          useDeviceStore.getState().ensureDeviceId(),
+        );
         reset();
         navigation.replace('DumpDetail', { dumpId: dumpId! });
         return;
@@ -123,7 +127,7 @@ export default function SelectedPhotosScreen({ navigation, route }: Props) {
       });
 
       if (photoUris.length > 0) {
-        await addPhotosToDump(dump.id, photoUris);
+        await addPhotosToDump(dump.id, photoUris, deviceId);
       }
 
       reset();

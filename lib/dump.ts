@@ -59,14 +59,18 @@ export async function createDump({
   return data;
 };
 
-export async function addPhotosToDump(dumpId: string, uris: string[]) {
+export async function addPhotosToDump(
+  dumpId: string,
+  uris: string[],
+  deviceId: string,
+) {
   if (!uris.length) return [];
 
   const rows = [];
 
   for (const uri of uris) {
     const url = await uploadPhoto(uri);
-    rows.push({ dump_id: dumpId, url });
+    rows.push({ dump_id: dumpId, url, device_id: deviceId });
   }
 
   const { data, error } = await supabase
@@ -251,7 +255,8 @@ export async function getDumpByInviteCode(code: string) {
   const { data, error } = await supabase
     .from('dumps')
     .select('*, photos(*)')
-    .eq('invite_code', code.toUpperCase())    
+    .eq('invite_code', code.toUpperCase())
+    .eq('is_open', true)
     .single();
 
   if (error) throw error;

@@ -7,6 +7,8 @@ import DumpForm from '../components/DumpForm';
 import { pickImages } from '../utils/pickImages';
 import { useCreateDumpStore } from '../store/createDumpStore';
 import { useDeviceStore } from '../store/deviceStore';
+import { containsProhibitedContent } from '../utils/contentSafety';
+import { Alert } from 'react-native';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CreateDump'>;
 
@@ -36,6 +38,10 @@ export default function CreateDumpScreen({ navigation }: Props) {
 
   const handleCreate = () => {
     if (!name.trim() || loading) return;
+    if (containsProhibitedContent(name)) {
+      Alert.alert('Choose another name', 'This Dump name is not allowed.');
+      return;
+    }
     Keyboard.dismiss();
 
     const displayName = useDeviceStore.getState().displayName?.trim();

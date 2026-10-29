@@ -3,6 +3,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../App';
 import ProfileNameForm from '../components/ProfileNameForm';
 import { useDeviceStore } from '../store/deviceStore';
+import { Alert } from 'react-native';
+import { containsProhibitedContent } from '../utils/contentSafety';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'HostProfile'>;
 
@@ -19,6 +21,10 @@ export default function HostProfileScreen({ navigation }: Props) {
       rightLabel="02 / 02"
       initialName={storedName ?? ''}
       onSubmit={(name) => {
+        if (containsProhibitedContent(name)) {
+          Alert.alert('Choose another name', 'This display name is not allowed.');
+          return;
+        }
         setDisplayName(name);
         navigation.navigate('CreateDump'); // not SelectedPhotos
       }}

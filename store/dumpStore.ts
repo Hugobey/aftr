@@ -18,6 +18,7 @@ export type DumpUI = {
 export type DumpPhoto = {
   id: string | null;
   url: string;
+  deviceId: string | null;
 };
 
 type DumpsState = {
@@ -38,6 +39,7 @@ function mapDump(row: any): DumpUI {
     .map((photo: any): DumpPhoto => ({
       id: typeof photo.id === 'string' ? photo.id : null,
       url: photo.url,
+      deviceId: typeof photo.device_id === 'string' ? photo.device_id : null,
     }));
   const photoUrls = photoItems.map((photo) => photo.url);
 
@@ -53,7 +55,7 @@ function mapDump(row: any): DumpUI {
       : photoUrls;
   const orderedPhotoItems =
     cover && !photoUrls.includes(cover)
-      ? [{ id: null, url: cover }, ...photoItems]
+      ? [{ id: null, url: cover, deviceId: null }, ...photoItems]
       : photoItems;
 
   return {

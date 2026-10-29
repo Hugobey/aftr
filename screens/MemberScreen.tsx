@@ -55,6 +55,8 @@ export default function MembersScreen({ navigation, route }: Props) {
   const current = useDumpsStore((s) => s.current);
   const hasCreated = useDeviceStore((s) => s.hasCreated);
   const deviceId = useDeviceStore((s) => s.deviceId);
+  const blockedDeviceIds = useDeviceStore((s) => s.blockedDeviceIds);
+  const blockDeviceId = useDeviceStore((s) => s.blockDeviceId);
   const isHost = hasCreated(dumpId);
 
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -134,6 +136,21 @@ export default function MembersScreen({ navigation, route }: Props) {
     };
   };
 
+  const handleBlock = (member: MemberRow) => {
+    Alert.alert(
+      `Block ${member.label}?`,
+      'Their photos will be hidden from your view of AFTR. You can still report specific content from the photo viewer.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: () => blockDeviceId(member.deviceId),
+        },
+      ],
+    );
+  };
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <Header
@@ -191,12 +208,24 @@ export default function MembersScreen({ navigation, route }: Props) {
                 </View>
 
                 {isHost && !m.isYou && (
-                  <Pressable
-                    hitSlop={10}
-                    onPress={() => setRemoveTarget(m)}
-                  >
-                    <Text style={styles.remove}>REMOVE</Text>
+                  <View style={styles.memberActions}>
+                    {!blockedDeviceIds.includes(m.deviceId) && (
+                      <Pressable hitSlop={10} onPress={() => handleBlock(m)}>
+                        <Text style={styles.block}>BLOCK</Text>
+                      </Pressable>
+                    )}
+                    <Pressable hitSlop={10} onPress={() => setRemoveTarget(m)}>
+                      <Text style={styles.remove}>REMOVE</Text>
+                    </Pressable>
+                  </View>
+                )}
+                {!isHost && !m.isYou && !blockedDeviceIds.includes(m.deviceId) && (
+                  <Pressable hitSlop={10} onPress={() => handleBlock(m)}>
+                    <Text style={styles.block}>BLOCK</Text>
                   </Pressable>
+                )}
+                {!isHost && !m.isYou && blockedDeviceIds.includes(m.deviceId) && (
+                  <Text style={styles.blocked}>BLOCKED</Text>
                 )}
               </View>
             ))}
@@ -333,6 +362,22 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 1.2,
+  },
+  memberActions: {
+    alignItems: 'flex-end',
+    gap: 12,
+  },
+  block: {
+    color: '#E85A5A',
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  blocked: {
+    color: '#777',
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   empty: {
     color: '#666',

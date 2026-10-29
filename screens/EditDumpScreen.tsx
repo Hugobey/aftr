@@ -8,6 +8,7 @@ import { pickImages } from '../utils/pickImages';
 import { updateDump } from '../lib/dump';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
+import { containsProhibitedContent } from '../utils/contentSafety';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EditDump'>;
 
@@ -83,6 +84,10 @@ export default function EditDumpScreen({ navigation, route }: Props) {
 
   const handleSave = async () => {
     if (!name.trim() || loading) return;
+    if (containsProhibitedContent(name)) {
+      Alert.alert('Choose another name', 'This Dump name is not allowed.');
+      return;
+    }
     Keyboard.dismiss();
     setLoading(true);
     try {

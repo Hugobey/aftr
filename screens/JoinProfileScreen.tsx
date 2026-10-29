@@ -6,6 +6,7 @@ import type { RootStackParamList } from '../App';
 import ProfileNameForm from '../components/ProfileNameForm';
 import { addDumpMember } from '../lib/members';
 import { useDeviceStore } from '../store/deviceStore';
+import { containsProhibitedContent } from '../utils/contentSafety';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinProfile'>;
 
@@ -19,6 +20,10 @@ export default function JoinProfileScreen({ navigation, route }: Props) {
   const addJoinedId = useDeviceStore((s) => s.addJoinedId);
 
   const onSubmit = async (displayName: string) => {
+    if (containsProhibitedContent(displayName)) {
+      Alert.alert('Choose another name', 'This display name is not allowed.');
+      return;
+    }
     try {
       setLoading(true);
       setDisplayName(displayName);

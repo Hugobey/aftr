@@ -11,8 +11,12 @@ type DeviceState = {
   displayName: string | null;
   legalAcceptedAt: string | null;
   pendingJoinCode: string | null;
+  blockedDeviceIds: string[];
 
   setPendingJoinCode: (code: string | null) => void;
+  blockDeviceId: (deviceId: string) => void;
+  unblockDeviceId: (deviceId: string) => void;
+  isDeviceBlocked: (deviceId: string | null | undefined) => boolean;
 
   pruneDumpIds: (validIds: string[]) => void;
   resetLegal: () => void;
@@ -48,8 +52,16 @@ export const useDeviceStore = create<DeviceState>()(
       displayName: null, // ← was missing
       legalAcceptedAt: null,
       pendingJoinCode: null,
+      blockedDeviceIds: [],
 
       setPendingJoinCode: (code) => set({ pendingJoinCode: code }),
+      blockDeviceId: (deviceId) => {
+        if (!deviceId || get().blockedDeviceIds.includes(deviceId)) return;
+        set({ blockedDeviceIds: [...get().blockedDeviceIds, deviceId] });
+      },
+      unblockDeviceId: (deviceId) =>
+        set({ blockedDeviceIds: get().blockedDeviceIds.filter((id) => id !== deviceId) }),
+      isDeviceBlocked: (deviceId) => !!deviceId && get().blockedDeviceIds.includes(deviceId),
       // include pendingJoinCode in persist only if you want survive kill; optional for MVP
 
       setDisplayName: (displayName: string) => {
@@ -69,6 +81,7 @@ export const useDeviceStore = create<DeviceState>()(
           displayName: null,
           joinedIds: [],
           createdIds: [],
+          blockedDeviceIds: [],
         }),
 
       ensureDeviceId: () => {

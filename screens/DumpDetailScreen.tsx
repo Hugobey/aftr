@@ -28,6 +28,7 @@ import {
   removeDumpMember,
 } from '../lib/members';
 import { deleteDump } from '../lib/dump';
+import { reportPhoto } from '../lib/reports';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DumpDetail'>;
 
@@ -52,9 +53,21 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const deviceId = useDeviceStore((s) => s.deviceId);
-  const photos = current?.photoUrls ?? [];
-  const photoItems = current?.photoItems ?? [];
-  const cover = current?.image ?? photos[0] ?? null;
+  const blockedDeviceIds = useDeviceStore((s) => s.blockedDeviceIds);
+  const blockDeviceId = useDeviceStore((s) => s.blockDeviceId);
+  const rawPhotoItems = current?.photoItems ?? [];
+  const photoItems = rawPhotoItems.filter(
+    (photo) => !photo.deviceId || !blockedDeviceIds.includes(photo.deviceId),
+  );
+  const coverBelongsToBlockedDevice = rawPhotoItems.some(
+    (photo) =>
+      photo.url === current?.image &&
+      !!photo.deviceId &&
+      blockedDeviceIds.includes(photo.deviceId),
+  );
+  const cover = coverBelongsToBlockedDevice
+    ? photoItems[0]?.url ?? null
+    : current?.image ?? photoItems[0]?.url ?? null;
 
 
   useEffect(() => {
@@ -266,7 +279,7 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
           ))}
         </View>
 
-        {photos.length === 0 && (
+        {photoItems.length === 0 && (
           <Text style={styles.noPhotos}>NO PHOTOS YET</Text>
         )}
       </ScrollView>
@@ -283,9 +296,22 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
             if (isHost) return true;
             return photo.deviceId === deviceId;
           }}
-          // onReport={async (photo) => {
-          //   await reportPhoto({ photoId: photo.id, dumpId, deviceId });
-          // }}
+          onReport={async (photo) => {
+            if (!photo.id) {
+              throw new Error('This photo cannot be reported.');
+            }
+            const reporterDeviceId = useDeviceStore.getState().ensureDeviceId();
+            await reportPhoto({
+              dumpId,
+              photoId: photo.id,
+              reporterDeviceId,
+              reportedDeviceId: photo.deviceId,
+            });
+            if (photo.deviceId && photo.deviceId !== reporterDeviceId) {
+              blockDeviceId(photo.deviceId);
+              setViewerIndex(null);
+            }
+          }}
         />
       )}
 
