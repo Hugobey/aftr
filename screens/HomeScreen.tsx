@@ -157,9 +157,9 @@ export default function HomeScreen({ navigation }: Props) {
       <View
         style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}
       >
-       {hasDumps ? (
+       {/* {hasDumps ? ( */}
     <DumpActionButton navigation={navigation} variant="join" />
-      ) : (
+      {/* ) : (
         <View style={styles.emptyActions}>
           <DumpActionButton
             navigation={navigation}
@@ -172,7 +172,7 @@ export default function HomeScreen({ navigation }: Props) {
             appearance="secondary"
           />
         </View>
-      )}
+      )} */}
       </View>
     </View>
   );

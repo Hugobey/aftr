@@ -1,4 +1,5 @@
--- Apply with the Supabase CLI or SQL editor before shipping this build.
+-- Apply after the existing dumps/photos/dump_members MVP policy script.
+-- This migration adds the schema required by the current app code.
 -- Device IDs are application identifiers, not an authentication system. Replace
 -- them with authenticated user IDs before relying on them for access control.
 
@@ -28,10 +29,15 @@ create unique index if not exists content_reports_one_open_report_per_device
 -- Do not use permissive anon policies for photos, memberships, or reports.
 alter table public.content_reports enable row level security;
 
+grant insert on public.content_reports to anon, authenticated;
+
+drop policy if exists "Members can report photos in their dumps"
+  on public.content_reports;
+
 create policy "Members can report photos in their dumps"
   on public.content_reports
   for insert
-  to anon, authenticated
+  to public
   with check (
     exists (
       select 1
