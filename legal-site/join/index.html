@@ -7,29 +7,90 @@
     <meta name="robots" content="noindex" />
     <title>Join on AFTR</title>
     <style>
-      :root { color-scheme: dark; font-family: Arial, Helvetica, sans-serif; background: #000; color: #fff; }
+      :root {
+        color-scheme: dark;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #000;
+        color: #fff;
+      }
       * { box-sizing: border-box; }
-      body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
       main { width: min(100%, 390px); text-align: center; }
-      .brand { margin: 0 0 84px; font-size: 22px; font-weight: 900; letter-spacing: -1.5px; }
-      .brand span, .eyebrow { color: #d7ff00; }
-      .eyebrow { margin: 0 0 14px; font-size: 12px; font-weight: 900; letter-spacing: 2px; }
-      h1 { margin: 0; font-size: clamp(44px, 14vw, 66px); line-height: .88; letter-spacing: -4px; }
-      .body { margin: 24px auto 34px; max-width: 310px; color: #a8a8a8; font-size: 16px; line-height: 1.5; }
+      .brand {
+        margin: 0 0 72px;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+      }
+      .brand span,
+      .eyebrow { color: #d7ff00; }
+      .eyebrow {
+        margin: 0 0 14px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 2px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(44px, 14vw, 66px);
+        line-height: 0.88;
+        letter-spacing: -4px;
+      }
+      .body {
+        margin: 24px auto 34px;
+        max-width: 320px;
+        color: #a8a8a8;
+        font-size: 16px;
+        line-height: 1.5;
+      }
       .button {
-        display: block; width: 100%; padding: 18px 20px; border: 0; cursor: pointer;
-        background: #d7ff00; color: #000; font-size: 15px; font-weight: 900;
-        letter-spacing: .7px; text-decoration: none;
+        display: block;
+        width: 100%;
+        padding: 18px 20px;
+        border: 0;
+        cursor: pointer;
+        background: #d7ff00;
+        color: #000;
+        font-size: 15px;
+        font-weight: 900;
+        letter-spacing: 0.7px;
+        text-decoration: none;
       }
-      .button:disabled { opacity: 0.5; }
-      .store {
-        display: none; margin-top: 12px; padding: 16px 20px; border: 1px solid #4b4b4b;
-        color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .7px; text-decoration: none;
+      .button:disabled { opacity: 0.55; }
+      .secondary {
+        display: block;
+        width: 100%;
+        margin-top: 12px;
+        padding: 16px 20px;
+        border: 1px solid #4b4b4b;
+        background: transparent;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 0.7px;
+        cursor: pointer;
       }
-      .notice { display: none; margin: 18px 0 0; color: #929292; font-size: 13px; line-height: 1.5; }
-      .code { margin-top: 32px; color: #666; font-size: 12px; font-weight: 900; letter-spacing: 1.5px; }
+      .code {
+        margin-top: 32px;
+        color: #666;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+      }
       .invalid { color: #f18b8b; }
-      .hint { margin-top: 12px; color: #666; font-size: 12px; }
+      .hint {
+        margin-top: 14px;
+        color: #666;
+        font-size: 12px;
+        line-height: 1.45;
+        min-height: 1.2em;
+      }
     </style>
   </head>
   <body>
@@ -38,34 +99,41 @@
       <p class="eyebrow">YOU'RE INVITED</p>
       <h1>JOIN THE<br />DUMP.</h1>
       <p class="body" id="bodyText">
-        Tap below to copy your invite and open AFTR.
+        Install AFTR, then open the app — your invite is copied so you land in the right dump.
       </p>
+
       <button class="button" type="button" id="joinBtn">JOIN THE DUMP</button>
-      <a class="store" id="store" href="#">AFTR IS COMING SOON</a>
-      <p class="notice" id="storeNotice">AFTR is not on the store yet. Install the TestFlight / dev build, then tap join.</p>
+      <button class="secondary" type="button" id="openBtn">ALREADY HAVE AFTR? OPEN</button>
+
       <p class="code" id="codeLabel"></p>
       <p class="hint" id="hint"></p>
     </main>
+
     <script>
       (function () {
+        // ——— set these ———
+        var TESTFLIGHT_URL = 'https://testflight.apple.com/join/ybJm3rK2';
+        var APP_STORE_URL = ''; // e.g. https://apps.apple.com/app/idXXXX when live
+        var PLAY_URL = 'https://play.google.com/store/apps/details?id=com.hugoblanchart.aftr';
+
         var pathParts = location.pathname.split('/').filter(Boolean);
         var queryCode = new URLSearchParams(location.search).get('code');
-        // /join/ABC123 → use last segment; /join or /join.html → no code from path
         var last = pathParts[pathParts.length - 1] || '';
-        var fromPath = /^[A-Za-z0-9]{4,10}$/.test(last) ? last : '';
+        var fromPath = /^[A-Za-z0-9]{4,12}$/.test(last) ? last : '';
         var code = String(queryCode || fromPath || '').toUpperCase();
-        var validCode = /^[A-Z0-9]{4,10}$/.test(code);
+        var validCode = /^[A-Z0-9]{4,12}$/.test(code);
 
         var codeLabel = document.getElementById('codeLabel');
         var joinBtn = document.getElementById('joinBtn');
-        var store = document.getElementById('store');
-        var storeNotice = document.getElementById('storeNotice');
+        var openBtn = document.getElementById('openBtn');
         var hint = document.getElementById('hint');
+        var bodyText = document.getElementById('bodyText');
 
         if (!validCode) {
           codeLabel.textContent = 'THIS INVITE LINK IS INVALID';
           codeLabel.className = 'code invalid';
           joinBtn.disabled = true;
+          openBtn.disabled = true;
           joinBtn.textContent = 'INVALID LINK';
           return;
         }
@@ -73,38 +141,89 @@
         codeLabel.textContent = 'INVITE CODE ' + code;
 
         var deepLink = 'aftr://join/' + encodeURIComponent(code);
-
-        joinBtn.addEventListener('click', function () {
-          joinBtn.disabled = true;
-          joinBtn.textContent = 'OPENING AFTR…';
-          hint.textContent = 'If AFTR asks to paste, choose Allow.';
-
-          var open = function () {
-            // Custom scheme → app (dev build must be installed)
-            window.location.href = deepLink;
-          };
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(code).then(open).catch(open);
-          } else {
-            open();
-          }
-
-          setTimeout(function () {
-            joinBtn.disabled = false;
-            joinBtn.textContent = 'JOIN THE DUMP';
-          }, 1500);
-        });
-
         var isAndroid = /Android/i.test(navigator.userAgent || '');
         var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-        if (isIOS || isAndroid) {
-          store.style.display = 'block';
-          storeNotice.style.display = 'block';
-          store.addEventListener('click', function (e) {
-            e.preventDefault();
-          });
+
+        function storeUrl() {
+          if (isAndroid) return PLAY_URL;
+          if (isIOS) return APP_STORE_URL || TESTFLIGHT_URL;
+          return APP_STORE_URL || TESTFLIGHT_URL;
         }
+
+        function copyCode() {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(code);
+          }
+          return Promise.resolve();
+        }
+
+        function tryOpenApp() {
+          window.location.href = deepLink;
+        }
+
+        function goToStore() {
+          window.location.href = storeUrl();
+        }
+
+        /**
+         * Primary path (most users): copy → brief app try → store.
+         * If the app opens, the page backgrounds and store redirect may not run.
+         */
+        function joinColdStart() {
+          joinBtn.disabled = true;
+          joinBtn.textContent = 'CONTINUING…';
+          hint.textContent = 'Invite copied. Taking you to install AFTR…';
+
+          var left = false;
+          function onHide() {
+            left = true;
+          }
+          document.addEventListener('visibilitychange', function () {
+            if (document.hidden) onHide();
+          });
+          window.addEventListener('pagehide', onHide);
+
+          copyCode()
+            .catch(function () {})
+            .then(function () {
+              // Soft try: opens AFTR only if already installed
+              tryOpenApp();
+
+              setTimeout(function () {
+                if (left || document.hidden) {
+                  // App likely opened — do nothing
+                  joinBtn.disabled = false;
+                  joinBtn.textContent = 'JOIN THE DUMP';
+                  return;
+                }
+                // Still here → install
+                goToStore();
+              }, 1200);
+            });
+        }
+
+        /** Secondary: already installed */
+        function openOnly() {
+          openBtn.disabled = true;
+          hint.textContent = 'Opening AFTR…';
+          copyCode()
+            .catch(function () {})
+            .then(function () {
+              tryOpenApp();
+              setTimeout(function () {
+                openBtn.disabled = false;
+                if (!document.hidden) {
+                  hint.textContent =
+                    'Couldn’t open AFTR. Use JOIN THE DUMP to install, then open the app.';
+                }
+              }, 1500);
+            });
+        }
+
+        joinBtn.addEventListener('click', joinColdStart);
+        openBtn.addEventListener('click', openOnly);
+
+        // QR scan landing: keep one tap (no auto-redirect — avoids surprising desktop)
       })();
     </script>
   </body>

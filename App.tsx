@@ -58,6 +58,9 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+Linking.getInitialURL().then((u) => console.log('initial URL', u));
+Linking.addEventListener('url', ({ url }) => console.log('url event', url));
+
 function captureJoinCodeFromUrl(url: string | null) {
   if (!url) return;
   const code = parseJoinCode(url);
