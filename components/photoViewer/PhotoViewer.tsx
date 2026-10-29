@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -135,24 +136,48 @@ export default function PhotoViewer({
     }
   };
 
-  const handleReport = async () => {
+  const handleReport = () => {
     if (!activePhoto) return;
     setMenuOpen(false);
-    Alert.alert('Report photo', 'Report as objectionable content?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Report',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            if (onReport) await onReport(activePhoto);
-            Alert.alert('Reported', 'Thanks — we’ll review this photo.');
-          } catch {
-            setError('Could not send report.');
-          }
+
+    Alert.alert(
+      'Report photo',
+      'Report this photo as objectionable content? We’ll open an email so you can send it to the team.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Report',
+          style: 'destructive',
+          onPress: async () => {
+            const photoId = activePhoto.id ?? 'unknown';
+            const photoUrl = activePhoto.url ?? '';
+            const subject = encodeURIComponent(`AFTR report — photo ${photoId}`);
+            const body = encodeURIComponent(
+              [
+                'I want to report this photo as objectionable.',
+                '',
+                `Photo ID: ${photoId}`,
+                `Photo URL: ${photoUrl}`,
+                '',
+                'Additional details:',
+                '',
+              ].join('\n'),
+            );
+            const mailUrl = `mailto:hugo@joinaftr.app?subject=${subject}&body=${body}`;
+            try {
+              const can = await Linking.canOpenURL(mailUrl);
+              if (!can) {
+                setError('No mail app available.');
+                return;
+              };
+              await Linking.openURL(mailUrl);
+            } catch {
+              setError('Could not open mail app.');
+            };
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   const handleDelete = async () => {

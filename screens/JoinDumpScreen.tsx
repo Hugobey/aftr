@@ -17,6 +17,7 @@ import { parseJoinCode } from '../utils/parseJoinCode';
 import { getDumpByInviteCode } from '../lib/dump';
 import { useDeviceStore } from '../store/deviceStore';
 import { addDumpMember } from '../lib/members';
+import { joinDumpWithCode } from '../lib/joinDump';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'JoinDump'>;
 
@@ -31,68 +32,62 @@ export default function JoinDumpScreen({ navigation, route }: Props) {
   const [joiningFromLink, setJoiningFromLink] = useState(Boolean(inviteCode));
   const handledInviteLink = useRef(false);
 
-  // Scale type from width (base ~390)
+  const setPendingJoinCode = useDeviceStore((s) => s.setPendingJoinCode);
+
   const scale = Math.min(Math.max(width / 390, 0.85), 1.1);
   const titleSize = Math.round(56 * scale);
   const pad = Math.max(16, Math.round(width * 0.05));
-
-  // Finder size: square, limited by width and available height
   const finderSize = Math.min(width - pad * 2, height * 0.42, 320);
 
-  const handleJoinCode = useCallback(async (rawCode: string) => {
-    const code = parseJoinCode(rawCode);
-    if (!code) {
-      setError('Invalid QR');
-      setJoiningFromLink(false);
-      return;
-    }
+  const handleJoinCode = useCallback(
+    async (rawCode: string) => {
+      setScanned(true);
+      setError(null);
+      setJoiningFromLink(true);
 
-    setScanned(true);
-    setError(null);
+      const result = await joinDumpWithCode(rawCode);
 
-    try {
-      const dump = await getDumpByInviteCode(code);
-      const dumpId = dump.id;
-      const dumpName = dump.name;
-
-      const displayName = useDeviceStore.getState().displayName?.trim();
-      const ensureDeviceId = useDeviceStore.getState().ensureDeviceId;
-      const addJoinedId = useDeviceStore.getState().addJoinedId;
-
-      if (displayName) {
-        await addDumpMember({
-          dumpId,
-          deviceId: ensureDeviceId(),
-          displayName,
-          role: 'member',
-        });
-        addJoinedId(dumpId);
-        navigation.replace('DumpDetail', { dumpId });
+      if (!result.ok) {
+        setError(result.error);
+        setScanned(false);
+        setJoiningFromLink(false);
         return;
       }
 
-      navigation.replace('JoinProfile', { dumpId, dumpName });
-    } catch {
-      setError('Dump not found');
-      setScanned(false);
-      setJoiningFromLink(false);
-    }
-  }, [navigation]);
+      // Avoid Home clipboard / deep-link double join
+      setPendingJoinCode(null);
 
+      if (result.needsProfile) {
+        navigation.replace('JoinProfile', {
+          dumpId: result.dumpId,
+          inviteCode: result.code,
+          dumpName: result.dumpName,
+        });
+        return;
+      }
+
+      navigation.replace('DumpDetail', { dumpId: result.dumpId });
+    },
+    [navigation, setPendingJoinCode],
+  );
+
+  // Camera only when not auto-joining from link
   useEffect(() => {
     if (joiningFromLink || !permission) return;
-    requestPermission();
+    if (!permission.granted) {
+      requestPermission();
+    }
   }, [joiningFromLink, permission, requestPermission]);
 
+  // Deep link / nav param: aftr://join/CODE → JoinDump with inviteCode
   useEffect(() => {
     if (!inviteCode || handledInviteLink.current) return;
-
     handledInviteLink.current = true;
     void handleJoinCode(inviteCode);
   }, [handleJoinCode, inviteCode]);
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
-    if (scanned) return;
+    if (scanned || joiningFromLink) return;
     void handleJoinCode(data);
   };
 
@@ -101,7 +96,6 @@ export default function JoinDumpScreen({ navigation, route }: Props) {
       <Header showBack rightLabel="SCAN" />
 
       <View style={[styles.content, { paddingHorizontal: pad }]}>
-        {/* Top copy — doesn't shrink away */}
         <View style={styles.top}>
           <Text style={styles.eyebrow}>JOIN A DUMP</Text>
           <Text
@@ -115,7 +109,6 @@ export default function JoinDumpScreen({ navigation, route }: Props) {
           {!!error && <Text style={styles.error}>{error}</Text>}
         </View>
 
-        {/* Camera fills remaining space */}
         <View style={styles.cameraBox}>
           {!joiningFromLink && permission?.granted && (
             <CameraView
@@ -125,8 +118,9 @@ export default function JoinDumpScreen({ navigation, route }: Props) {
             />
           )}
 
-          {/* Centered square finder */}
-          <View style={[styles.finder, { width: finderSize, height: finderSize }]}>
+          <View
+            style={[styles.finder, { width: finderSize, height: finderSize }]}
+          >
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />

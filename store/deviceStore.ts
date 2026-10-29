@@ -10,6 +10,9 @@ type DeviceState = {
   createdIds: string[];
   displayName: string | null;
   legalAcceptedAt: string | null;
+  pendingJoinCode: string | null;
+
+  setPendingJoinCode: (code: string | null) => void;
 
   pruneDumpIds: (validIds: string[]) => void;
   resetLegal: () => void;
@@ -44,6 +47,10 @@ export const useDeviceStore = create<DeviceState>()(
       createdIds: [],
       displayName: null, // ← was missing
       legalAcceptedAt: null,
+      pendingJoinCode: null,
+
+      setPendingJoinCode: (code) => set({ pendingJoinCode: code }),
+      // include pendingJoinCode in persist only if you want survive kill; optional for MVP
 
       setDisplayName: (displayName: string) => {
         set({ displayName });

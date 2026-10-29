@@ -52,6 +52,10 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const deviceId = useDeviceStore((s) => s.deviceId);
+  const photos = current?.photoUrls ?? [];
+  const photoItems = current?.photoItems ?? [];
+  const cover = current?.image ?? photos[0] ?? null;
+
 
   useEffect(() => {
     fetchDump(dumpId);
@@ -93,9 +97,6 @@ export default function DumpDetailScreen({ navigation, route }: Props) {
     }, [dumpId, fetchDump, navigation])
   );
 
-  const photos = current?.photoUrls ?? [];
-  const photoItems = current?.photoItems ?? [];
-  const cover = current?.image ?? photos[0] ?? null;
 
   const goHome = () => {
     navigation.dispatch(

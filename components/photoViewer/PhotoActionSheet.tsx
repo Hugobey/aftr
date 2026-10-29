@@ -7,6 +7,7 @@ type Props = {
   saving?: boolean;
   copying?: boolean;
   showDelete?: boolean;
+  busy?: boolean;
   onClose: () => void;
   onSave: () => void;
   onCopy: () => void;
@@ -20,6 +21,7 @@ export default function PhotoActionSheet({
   saving,
   copying,
   showDelete,
+  busy,
   onClose,
   onSave,
   onCopy,

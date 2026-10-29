@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -19,6 +19,9 @@ import ArchiveGrid from '../components/ArchiveGrid';
 import { useDumpsStore } from '../store/dumpStore';
 import { useDeviceStore } from '../store/deviceStore';
 import DumpActionButton from '../components/DumpActionButton';
+import { joinDumpWithCode } from '../lib/joinDump';
+import * as Clipboard from 'expo-clipboard';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -54,14 +57,48 @@ export default function HomeScreen({ navigation }: Props) {
   const totalCount = visibleDumps.length;
   const hasDumps = totalCount > 0;
 
+  const pendingJoinCode = useDeviceStore((s) => s.pendingJoinCode);
+  const setPendingJoinCode = useDeviceStore((s) => s.setPendingJoinCode);
+  const handledPending = useRef(false);
+
+  const consumeJoinCode = useCallback(
+    async (raw: string) => {
+      const result = await joinDumpWithCode(raw);
+      if (!result.ok) {
+        setPendingJoinCode(null);
+        return;
+      }
+
+      setPendingJoinCode(null);
+      try {
+        await Clipboard.setStringAsync('');
+      } catch {}
+
+      if (result.needsProfile) {
+        navigation.replace('JoinProfile', {
+          dumpId: result.dumpId,
+          dumpName: result.dumpName,
+          inviteCode: result.code,
+        });
+        return;
+      };
+      navigation.replace('DumpDetail', { dumpId: result.dumpId });
+    },
+    [navigation, setPendingJoinCode],
+  );
+
+  useEffect(() => {
+    if (handledPending.current) return;
+    if (!pendingJoinCode) return;
+    handledPending.current = true;
+    consumeJoinCode(pendingJoinCode);
+  }, [pendingJoinCode, consumeJoinCode]);
+
 
   // DEBUG
   const clearName = () => {
     const before = useDeviceStore.getState().displayName;
     useDeviceStore.getState().setDisplayName(null as any);
-    // if setDisplayName only accepts string, use:
-    // useDeviceStore.setState({ displayName: null });
-
     const after = useDeviceStore.getState().displayName;
     console.log('DEBUG clear displayName', { before, after });
   };

@@ -1,5 +1,5 @@
 // App.tsx
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import {
   NavigationContainer,
@@ -8,11 +8,13 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { View } from 'react-native';
+import { Linking, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 
 import { Colors } from './constants/Colors';
 import { useDeviceStore } from './store/deviceStore';
 import { useDumpsStore } from './store/dumpStore';
+import { parseJoinCode } from './utils/parseJoinCode';
 
 import HomeScreen from './screens/HomeScreen';
 import CreateDumpScreen from './screens/CreateDumpScreen';
@@ -33,7 +35,7 @@ export type RootStackParamList = {
   DumpDetail: { dumpId: string };
   Members: { dumpId: string };
   Invite: { dumpId: string };
-  JoinProfile: { dumpId: string; dumpName?: string };
+  JoinProfile: { dumpId: string; dumpName?: string; inviteCode?: string };
   HostProfile: undefined;
   EditDump: { dumpId: string };
   SelectedPhotos: {
@@ -48,13 +50,21 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['aftr://'],
+  prefixes: ['aftr://', 'https://joinaftr.app'],
   config: {
     screens: {
       JoinDump: 'join/:inviteCode',
     },
   },
 };
+
+function captureJoinCodeFromUrl(url: string | null) {
+  if (!url) return;
+  const code = parseJoinCode(url);
+  if (code) {
+    useDeviceStore.getState().setPendingJoinCode(code);
+  }
+}
 
 export default function App() {
   return (
@@ -70,24 +80,51 @@ function Root() {
   const normalizeCreatedIds = useDeviceStore((s) => s.normalizeCreatedIds);
   const fetchDumps = useDumpsStore((s) => s.fetchDumps);
 
-  // Hooks must run every render (no early return above this)
+  // Capture deep link even before legal / navigation
+  useEffect(() => {
+    Linking.getInitialURL().then(captureJoinCodeFromUrl);
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      captureJoinCodeFromUrl(url);
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Clipboard → pending (helps after install from join page)
+  useEffect(() => {
+    if (!hydrated) return;
+    (async () => {
+      try {
+        const raw = await Clipboard.getStringAsync();
+        const code = parseJoinCode(raw);
+        if (code) {
+          useDeviceStore.getState().setPendingJoinCode(code);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+  }, [hydrated]);
+
   useEffect(() => {
     if (!hydrated || !legalAcceptedAt) return;
     normalizeCreatedIds();
     fetchDumps();
   }, [hydrated, legalAcceptedAt, normalizeCreatedIds, fetchDumps]);
 
-  // 1) Wait for persisted store (AsyncStorage)
   if (!hydrated) {
     return <View style={{ flex: 1, backgroundColor: Colors.background }} />;
   }
 
-  // 2) First launch only
   if (!legalAcceptedAt) {
-    return <LegalGateScreen onAccepted={() => {}} />;
+    return (
+      <LegalGateScreen
+        onAccepted={() => {
+          // legalAcceptedAt is set inside the screen / store
+        }}
+      />
+    );
   }
 
-  // 3) Normal app
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer linking={linking}>
@@ -110,7 +147,30 @@ function Root() {
           <Stack.Screen name="HostProfile" component={HostProfileScreen} />
           <Stack.Screen name="EditDump" component={EditDumpScreen} />
         </Stack.Navigator>
+
+        {/* Runs only when navigator exists; consumes pending code */}
+        <PendingJoinHandler />
       </NavigationContainer>
     </GestureHandlerRootView>
   );
+}
+
+/**
+ * After legal + nav ready: pending code → profile or dump.
+ * Avoids empty Home for QR / clipboard cold start.
+ */
+function PendingJoinHandler() {
+  const pendingJoinCode = useDeviceStore((s) => s.pendingJoinCode);
+  const setPendingJoinCode = useDeviceStore((s) => s.setPendingJoinCode);
+  const displayName = useDeviceStore((s) => s.displayName);
+  const [busy, setBusy] = useState(false);
+  const ran = useRef(false);
+
+  // navigation from container — useNavigation only works under screens;
+  // use a ref on the container instead:
+  const navigationRef = useRef<any>(null);
+
+  // Better pattern: put this logic inside Home with navigation prop.
+  // See HomeScreen snippet below — keep App.tsx without this if you prefer.
+  return null;
 }
