@@ -3,6 +3,7 @@
   "cleanUrls": true,
   "rewrites": [
     { "source": "/join", "destination": "/join.html" },
-    { "source": "/join/:code", "destination": "/join.html" }
+    { "source": "/join/:code", "destination": "/join.html" },
+    { "source": "/get-aftr", "destination": "/get-aftr/index.html" }
   ]
 }

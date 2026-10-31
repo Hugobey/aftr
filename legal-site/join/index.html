@@ -114,7 +114,6 @@
         // ——— set these ———
         var TESTFLIGHT_URL = 'https://testflight.apple.com/join/ybJm3rK2';
         var APP_STORE_URL = ''; // e.g. https://apps.apple.com/app/idXXXX when live
-        var PLAY_URL = 'https://play.google.com/store/apps/details?id=com.hugoblanchart.aftr';
 
         var pathParts = location.pathname.split('/').filter(Boolean);
         var queryCode = new URLSearchParams(location.search).get('code');
@@ -144,8 +143,14 @@
         var isAndroid = /Android/i.test(navigator.userAgent || '');
         var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
 
+        if (!isAndroid && !isIOS) {
+          bodyText.textContent =
+            'This invite is for AFTR on your phone. Open this link on your Android or iPhone, then use the code below.';
+          joinBtn.textContent = 'COPY INVITE CODE';
+          openBtn.textContent = 'OPEN ON YOUR PHONE';
+        }
+
         function storeUrl() {
-          if (isAndroid) return PLAY_URL;
           if (isIOS) return APP_STORE_URL || TESTFLIGHT_URL;
           return APP_STORE_URL || TESTFLIGHT_URL;
         }
@@ -154,7 +159,21 @@
           if (navigator.clipboard && navigator.clipboard.writeText) {
             return navigator.clipboard.writeText(code);
           }
-          return Promise.resolve();
+          var textarea = document.createElement('textarea');
+          textarea.value = code;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            if (document.execCommand('copy')) {
+              document.body.removeChild(textarea);
+              return Promise.resolve();
+            }
+          } catch (error) {}
+          document.body.removeChild(textarea);
+          return Promise.reject(new Error('Clipboard unavailable'));
         }
 
         function tryOpenApp() {
@@ -165,14 +184,26 @@
           window.location.href = storeUrl();
         }
 
-        /**
-         * Primary path (most users): copy → brief app try → store.
-         * If the app opens, the page backgrounds and store redirect may not run.
-         */
+        function goToAndroidDownload() {
+          window.location.href = '/legal-site/get-aftr?code=' + encodeURIComponent(code);
+        }
+
+        /** Primary Android path: copy → brief app try → APK download page. */
         function joinColdStart() {
           joinBtn.disabled = true;
           joinBtn.textContent = 'CONTINUING…';
-          hint.textContent = 'Invite copied. Taking you to install AFTR…';
+          hint.textContent = 'Saving your invite, then continuing…';
+
+          if (!isAndroid && !isIOS) {
+            copyCode()
+              .then(function () { hint.textContent = 'Invite code copied. Open this link on your phone to join.'; })
+              .catch(function () { hint.textContent = 'Copy was blocked. Use the visible invite code on your phone.'; })
+              .then(function () {
+                joinBtn.disabled = false;
+                joinBtn.textContent = 'COPY INVITE CODE';
+              });
+            return;
+          }
 
           var left = false;
           function onHide() {
@@ -186,7 +217,7 @@
           copyCode()
             .catch(function () {})
             .then(function () {
-              // Soft try: opens AFTR only if already installed
+              // Soft try: opens AFTR only if it is already installed.
               tryOpenApp();
 
               setTimeout(function () {
@@ -196,8 +227,9 @@
                   joinBtn.textContent = 'JOIN THE DUMP';
                   return;
                 }
-                // Still here → install
-                goToStore();
+                // Still here → Android gets the APK path; other platforms keep their store path.
+                if (isAndroid) goToAndroidDownload();
+                else goToStore();
               }, 1200);
             });
         }

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="robots" content="noindex" />
+    <title>Get AFTR for Android</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #000;
+        color: #fff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      main {
+        width: min(100%, 390px);
+        text-align: center;
+      }
+      .brand {
+        margin: 0 0 72px;
+        font-size: 22px;
+        font-weight: 900;
+        letter-spacing: -1.5px;
+      }
+      .brand span,
+      .eyebrow { color: #d7ff00; }
+      .eyebrow {
+        margin: 0 0 14px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 2px;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(40px, 13vw, 58px);
+        line-height: 0.9;
+        letter-spacing: -3px;
+      }
+      .body {
+        margin: 24px auto 0;
+        max-width: 330px;
+        color: #a8a8a8;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      .button,
+      .secondary {
+        display: block;
+        width: 100%;
+        padding: 18px 20px;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.7px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+      }
+      .button {
+        margin-top: 28px;
+        border: 0;
+        background: #d7ff00;
+        color: #000;
+      }
+      .button[aria-disabled="true"] {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+      .secondary {
+        margin-top: 12px;
+        border: 1px solid #4b4b4b;
+        background: transparent;
+        color: #fff;
+      }
+      .steps {
+        margin: 28px 0 0;
+        padding: 0;
+        list-style: none;
+        color: #777;
+        font-size: 13px;
+        line-height: 1.55;
+        text-align: left;
+      }
+      .steps li {
+        margin: 0 0 8px;
+        padding-left: 1.25em;
+        position: relative;
+      }
+      .steps li::before {
+        content: attr(data-n);
+        position: absolute;
+        left: 0;
+        color: #d7ff00;
+        font-weight: 900;
+      }
+      .code {
+        display: none;
+        margin-top: 28px;
+        color: #d7ff00;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: 1.5px;
+      }
+      .hint {
+        min-height: 1.2em;
+        margin-top: 14px;
+        color: #a8a8a8;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .warning {
+        display: none;
+        margin: 20px 0 0;
+        color: #f4c76b;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .note {
+        margin: 20px 0 0;
+        color: #555;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .hidden { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">AFTR<span>.</span></p>
+      <p class="eyebrow">ANDROID INSTALL</p>
+      <h1>GET AFTR.</h1>
+      <p class="body" id="bodyText">
+        Download, install, then open AFTR. Your invite was copied — the app should join automatically.
+      </p>
+
+      <a class="button" id="downloadBtn" href="#" aria-disabled="true">APK LINK NOT READY</a>
+      <button class="secondary" type="button" id="openBtn">ALREADY INSTALLED? OPEN APP</button>
+
+      <!-- Shown only if clipboard fails or open-app fallback needs it -->
+      <p class="code" id="codeLabel"></p>
+      <button class="secondary hidden" type="button" id="copyBtn">COPY INVITE CODE</button>
+
+      <p class="hint" id="hint" aria-live="polite"></p>
+      <p class="warning" id="browserWarning">
+        Using Instagram, TikTok, or Facebook? Open this page in Chrome if download fails.
+      </p>
+
+      <ol class="steps" id="installHelp">
+        <li data-n="1.">Tap Download and install AFTR</li>
+        <li data-n="2.">If Android warns you, choose Install / Install anyway</li>
+        <li data-n="3.">Open AFTR — you should join the dump automatically</li>
+      </ol>
+
+      <p class="note" id="securityNote">
+        Security warnings are normal: AFTR isn’t on the Play Store yet.
+      </p>
+    </main>
+
+    <script>
+      (function () {
+        var ANDROID_APK_URL =
+          window.AFTR_ANDROID_APK_URL ||
+          'https://github.com/Hugobey/aftr-apk/releases/download/v1.0.0/app-release.apk';
+
+        var code = String(new URLSearchParams(location.search).get('code') || '').toUpperCase();
+        var validCode = /^[A-Z0-9]{4,12}$/.test(code);
+        var isAndroid = /Android/i.test(navigator.userAgent || '');
+        var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        var isInAppBrowser = /Instagram|FBAN|FBAV|FB_IAB|TikTok|Bytedance/i.test(
+          navigator.userAgent || ''
+        );
+
+        var bodyText = document.getElementById('bodyText');
+        var codeLabel = document.getElementById('codeLabel');
+        var hint = document.getElementById('hint');
+        var downloadBtn = document.getElementById('downloadBtn');
+        var openBtn = document.getElementById('openBtn');
+        var copyBtn = document.getElementById('copyBtn');
+        var installHelp = document.getElementById('installHelp');
+        var securityNote = document.getElementById('securityNote');
+
+        function showCodeFallback(message) {
+          codeLabel.style.display = 'block';
+          codeLabel.textContent = 'INVITE CODE ' + code;
+          copyBtn.classList.remove('hidden');
+          if (message) hint.textContent = message;
+        }
+
+        function fallbackCopy() {
+          var textarea = document.createElement('textarea');
+          textarea.value = code;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            if (document.execCommand('copy')) {
+              document.body.removeChild(textarea);
+              return true;
+            }
+          } catch (e) {}
+          document.body.removeChild(textarea);
+          return false;
+        }
+
+        function copyCode() {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(code).catch(function () {
+              if (fallbackCopy()) return;
+              throw new Error('Clipboard unavailable');
+            });
+          }
+          return fallbackCopy()
+            ? Promise.resolve()
+            : Promise.reject(new Error('Clipboard unavailable'));
+        }
+
+        if (!validCode) {
+          bodyText.textContent = 'This invite link is invalid or incomplete.';
+          downloadBtn.textContent = 'INVALID LINK';
+          openBtn.classList.add('hidden');
+          installHelp.classList.add('hidden');
+          securityNote.classList.add('hidden');
+          return;
+        }
+
+        if (isInAppBrowser) {
+          document.getElementById('browserWarning').style.display = 'block';
+        }
+
+        // Non-Android: no APK path
+        if (!isAndroid) {
+          bodyText.textContent = isIOS
+            ? 'APK downloads are Android-only. Open AFTR on your phone to join with your invite.'
+            : 'Open this invite link on an Android phone to download AFTR.';
+          downloadBtn.classList.add('hidden');
+          openBtn.classList.add('hidden');
+          installHelp.classList.add('hidden');
+          securityNote.classList.add('hidden');
+          showCodeFallback('Keep this code if you need to join manually.');
+          copyBtn.addEventListener('click', function () {
+            copyCode()
+              .then(function () {
+                hint.textContent = 'Invite code copied.';
+              })
+              .catch(function () {
+                hint.textContent = 'Copy failed — use the code shown above.';
+              });
+          });
+          return;
+        }
+
+        // Android: wire download
+        if (/^https:\/\//i.test(ANDROID_APK_URL)) {
+          downloadBtn.href = ANDROID_APK_URL;
+          downloadBtn.removeAttribute('aria-disabled');
+          downloadBtn.textContent = 'DOWNLOAD AFTR';
+        } else {
+          downloadBtn.textContent = 'APK LINK NOT READY';
+          hint.textContent = 'Download link is not configured yet. Ask your host for the APK.';
+        }
+
+        openBtn.addEventListener('click', function () {
+          copyCode().catch(function () {});
+          window.location.href = 'aftr://join/' + encodeURIComponent(code);
+          setTimeout(function () {
+            if (!document.hidden) {
+              showCodeFallback(
+                'App did not open. Install AFTR, or open it manually and use the code below.'
+              );
+            }
+          }, 1500);
+        });
+
+        copyBtn.addEventListener('click', function () {
+          copyCode()
+            .then(function () {
+              hint.textContent = 'Invite code copied. Open AFTR to join.';
+            })
+            .catch(function () {
+              hint.textContent = 'Copy failed — type the code shown above in AFTR.';
+            });
+        });
+
+        // Silent re-copy after landing from join page
+        copyCode()
+          .then(function () {
+            hint.textContent = '';
+          })
+          .catch(function () {
+            showCodeFallback(
+              'Could not copy automatically. Use the code below if AFTR does not join on its own.'
+            );
+          });
+      })();
+    </script>
+  </body>
+</html>
